@@ -1,13 +1,20 @@
 import type { MetadataRoute } from "next";
-import { blogPosts } from "@/data/blog";
-import { events } from "@/data/events";
-import { sermons } from "@/data/sermons";
-
-export const dynamic = "force-static";
+import { client } from "@/sanity/client";
+import {
+  BLOG_SLUGS_QUERY,
+  EVENT_SLUGS_QUERY,
+  SERMON_SLUGS_QUERY,
+} from "@/sanity/queries";
 
 const BASE = "https://hopeag.com";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const [blogSlugs, eventSlugs, sermonSlugs] = await Promise.all([
+    client.fetch<{ slug: string }[]>(BLOG_SLUGS_QUERY),
+    client.fetch<{ slug: string }[]>(EVENT_SLUGS_QUERY),
+    client.fetch<{ slug: string }[]>(SERMON_SLUGS_QUERY),
+  ]);
+
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE, changeFrequency: "weekly", priority: 1.0 },
     { url: `${BASE}/events`, changeFrequency: "weekly", priority: 0.9 },
@@ -22,23 +29,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/prayer`, changeFrequency: "monthly", priority: 0.6 },
   ];
 
-  const blogPages: MetadataRoute.Sitemap = blogPosts.map((post) => ({
-    url: `${BASE}/blog/${post.slug}`,
-    lastModified: new Date(post.dateWritten),
+  const blogPages: MetadataRoute.Sitemap = blogSlugs.map((s) => ({
+    url: `${BASE}/blog/${s.slug}`,
     changeFrequency: "monthly",
     priority: 0.6,
   }));
 
-  const eventPages: MetadataRoute.Sitemap = events.map((event) => ({
-    url: `${BASE}/events/${event.slug}`,
-    lastModified: new Date(event.startTime),
+  const eventPages: MetadataRoute.Sitemap = eventSlugs.map((s) => ({
+    url: `${BASE}/events/${s.slug}`,
     changeFrequency: "monthly",
     priority: 0.6,
   }));
 
-  const sermonPages: MetadataRoute.Sitemap = sermons.map((sermon) => ({
-    url: `${BASE}/sermons/${sermon.slug}`,
-    lastModified: new Date(sermon.datePreached),
+  const sermonPages: MetadataRoute.Sitemap = sermonSlugs.map((s) => ({
+    url: `${BASE}/sermons/${s.slug}`,
     changeFrequency: "monthly",
     priority: 0.5,
   }));

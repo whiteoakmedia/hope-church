@@ -1,16 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { events } from "@/data/events";
+import { client } from "@/sanity/client";
+import {
+  EVENT_BY_SLUG_QUERY,
+  EVENT_SLUGS_QUERY,
+} from "@/sanity/queries";
+import type { SanityEvent } from "@/sanity/types";
 
 /* ------------------------------------------------------------------ */
 /*  Static Params                                                      */
 /* ------------------------------------------------------------------ */
 
 export async function generateStaticParams() {
-  return events.map((event) => ({
-    slug: event.slug,
-  }));
+  const slugs = await client.fetch<{ slug: string }[]>(EVENT_SLUGS_QUERY);
+  return slugs.map((s) => ({ slug: s.slug }));
 }
 
 /* ------------------------------------------------------------------ */
@@ -23,7 +27,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const event = events.find((e) => e.slug === slug);
+  const event = await client.fetch<SanityEvent | null>(EVENT_BY_SLUG_QUERY, {
+    slug,
+  });
   if (!event) return { title: "Event Not Found" };
 
   return {
@@ -156,7 +162,9 @@ export default async function EventDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = events.find((e) => e.slug === slug);
+  const event = await client.fetch<SanityEvent | null>(EVENT_BY_SLUG_QUERY, {
+    slug,
+  });
 
   if (!event) {
     notFound();

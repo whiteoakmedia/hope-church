@@ -1,6 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getUpcomingEvents, getPastEvents } from "@/data/events";
+import { client } from "@/sanity/client";
+import { ALL_EVENTS_QUERY } from "@/sanity/queries";
+import type { SanityEvent } from "@/sanity/types";
+import { getUpcomingEvents, getPastEvents } from "@/lib/events";
 
 /* ------------------------------------------------------------------ */
 /*  Metadata                                                           */
@@ -116,9 +119,10 @@ function ArrowRightIcon() {
 /*  Events Page                                                        */
 /* ------------------------------------------------------------------ */
 
-export default function EventsPage() {
-  const upcomingEvents = getUpcomingEvents();
-  const pastEvents = getPastEvents();
+export default async function EventsPage() {
+  const allEvents = await client.fetch<SanityEvent[]>(ALL_EVENTS_QUERY);
+  const upcomingEvents = getUpcomingEvents(allEvents);
+  const pastEvents = getPastEvents(allEvents);
 
   return (
     <>

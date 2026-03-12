@@ -1,16 +1,21 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { sermons } from "@/data/sermons";
+import { client } from "@/sanity/client";
+import {
+  SERMON_BY_SLUG_QUERY,
+  SERMON_SLUGS_QUERY,
+  ALL_SERMONS_QUERY,
+} from "@/sanity/queries";
+import type { SanitySermon } from "@/sanity/types";
 
 /* ------------------------------------------------------------------ */
 /*  Static Params                                                      */
 /* ------------------------------------------------------------------ */
 
 export async function generateStaticParams() {
-  return sermons.map((sermon) => ({
-    slug: sermon.slug,
-  }));
+  const slugs = await client.fetch<{ slug: string }[]>(SERMON_SLUGS_QUERY);
+  return slugs.map((s) => ({ slug: s.slug }));
 }
 
 /* ------------------------------------------------------------------ */
@@ -23,15 +28,22 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const sermon = sermons.find((s) => s.slug === slug);
+  const sermon = await client.fetch<SanitySermon | null>(
+    SERMON_BY_SLUG_QUERY,
+    { slug }
+  );
   if (!sermon) return { title: "Sermon Not Found" };
 
   return {
     title: sermon.name,
-    description: sermon.description || `Watch "${sermon.name}" by ${sermon.speaker}`,
+    description:
+      sermon.description ||
+      `Watch "${sermon.name}" by ${sermon.speaker}`,
     openGraph: {
       title: sermon.name,
-      description: sermon.description || `Watch "${sermon.name}" by ${sermon.speaker}`,
+      description:
+        sermon.description ||
+        `Watch "${sermon.name}" by ${sermon.speaker}`,
       type: "article",
       images: [
         {
@@ -87,14 +99,18 @@ export default async function SermonDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const sermon = sermons.find((s) => s.slug === slug);
+  const sermon = await client.fetch<SanitySermon | null>(
+    SERMON_BY_SLUG_QUERY,
+    { slug }
+  );
 
   if (!sermon) {
     notFound();
   }
 
   // Get 3 related sermons (excluding the current one)
-  const relatedSermons = sermons
+  const allSermons = await client.fetch<SanitySermon[]>(ALL_SERMONS_QUERY);
+  const relatedSermons = allSermons
     .filter((s) => s.slug !== sermon.slug)
     .slice(0, 3);
 

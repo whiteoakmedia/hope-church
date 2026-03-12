@@ -1,15 +1,23 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { blogPosts } from "@/data/blog";
 import { notFound } from "next/navigation";
+import { client } from "@/sanity/client";
+import {
+  BLOG_POST_BY_SLUG_QUERY,
+  BLOG_SLUGS_QUERY,
+  ALL_BLOG_POSTS_QUERY,
+} from "@/sanity/queries";
+import type { SanityBlogPost } from "@/sanity/types";
+import PortableTextRenderer from "@/components/PortableTextRenderer";
 
 /* ------------------------------------------------------------------ */
 /*  Static Params                                                      */
 /* ------------------------------------------------------------------ */
 
-export function generateStaticParams() {
-  return blogPosts.map((post) => ({ slug: post.slug }));
+export async function generateStaticParams() {
+  const slugs = await client.fetch<{ slug: string }[]>(BLOG_SLUGS_QUERY);
+  return slugs.map((s) => ({ slug: s.slug }));
 }
 
 /* ------------------------------------------------------------------ */
@@ -22,7 +30,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = blogPosts.find((p) => p.slug === slug);
+  const post = await client.fetch<SanityBlogPost | null>(
+    BLOG_POST_BY_SLUG_QUERY,
+    { slug }
+  );
   if (!post) return { title: "Post Not Found" };
   return {
     title: post.name,
@@ -58,12 +69,14 @@ export default async function BlogDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = blogPosts.find((p) => p.slug === slug);
+  const post = await client.fetch<SanityBlogPost | null>(
+    BLOG_POST_BY_SLUG_QUERY,
+    { slug }
+  );
   if (!post) notFound();
 
-  const relatedPosts = blogPosts
-    .filter((p) => p.slug !== slug)
-    .slice(0, 2);
+  const allPosts = await client.fetch<SanityBlogPost[]>(ALL_BLOG_POSTS_QUERY);
+  const relatedPosts = allPosts.filter((p) => p.slug !== slug).slice(0, 2);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -144,28 +157,7 @@ export default async function BlogDetailPage({
       {/* ---- Article Content ---- */}
       <section className="section-padding section-padding-y">
         <div className="container-wide max-w-4xl">
-          <article
-            className="
-              prose-article
-              text-text text-[1.05rem] md:text-[1.1rem] leading-[1.8]
-              [&>h2]:font-heading [&>h2]:text-primary [&>h2]:text-2xl [&>h2]:md:text-3xl [&>h2]:mt-12 [&>h2]:mb-5 [&>h2]:leading-snug
-              [&>h3]:font-heading [&>h3]:text-primary [&>h3]:text-xl [&>h3]:md:text-2xl [&>h3]:mt-10 [&>h3]:mb-4
-              [&>p]:mb-6 [&>p]:text-text-muted
-              [&>ul]:mb-6 [&>ul]:pl-0 [&>ul]:space-y-3
-              [&>ul>li]:relative [&>ul>li]:pl-6 [&>ul>li]:text-text-muted [&>ul>li]:leading-relaxed
-              [&>ul>li]:before:content-[''] [&>ul>li]:before:absolute [&>ul>li]:before:left-0 [&>ul>li]:before:top-[10px]
-              [&>ul>li]:before:w-2 [&>ul>li]:before:h-2 [&>ul>li]:before:rounded-full [&>ul>li]:before:bg-accent/40
-              [&>ol]:mb-6 [&>ol]:pl-6 [&>ol]:space-y-3 [&>ol]:list-decimal
-              [&>ol>li]:text-text-muted [&>ol>li]:leading-relaxed [&>ol>li]:pl-2
-              [&>blockquote]:my-10 [&>blockquote]:pl-8 [&>blockquote]:border-l-4 [&>blockquote]:border-accent
-              [&>blockquote]:bg-accent/5 [&>blockquote]:rounded-r-xl [&>blockquote]:py-6 [&>blockquote]:pr-8
-              [&>blockquote>p]:text-primary [&>blockquote>p]:font-heading [&>blockquote>p]:text-lg [&>blockquote>p]:md:text-xl
-              [&>blockquote>p]:italic [&>blockquote>p]:leading-relaxed [&>blockquote>p]:mb-0
-              [&_strong]:text-primary [&_strong]:font-semibold
-              [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 [&_a]:hover:text-accent-light [&_a]:transition-colors
-            "
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
+          <PortableTextRenderer content={post.content} />
         </div>
       </section>
 

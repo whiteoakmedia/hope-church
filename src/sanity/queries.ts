@@ -1,0 +1,133 @@
+/* ------------------------------------------------------------------ */
+/*  Sermons                                                            */
+/* ------------------------------------------------------------------ */
+
+export const ALL_SERMONS_QUERY = `
+  *[_type == "sermon"] | order(datePreached desc) {
+    name,
+    "slug": slug.current,
+    speaker,
+    youtubeUrl,
+    youtubeVideoId,
+    description,
+    datePreached
+  }
+`;
+
+export const SERMON_BY_SLUG_QUERY = `
+  *[_type == "sermon" && slug.current == $slug][0] {
+    name,
+    "slug": slug.current,
+    speaker,
+    youtubeUrl,
+    youtubeVideoId,
+    description,
+    datePreached
+  }
+`;
+
+export const SERMON_SLUGS_QUERY = `
+  *[_type == "sermon"]{ "slug": slug.current }
+`;
+
+/* ------------------------------------------------------------------ */
+/*  Blog Posts                                                         */
+/* ------------------------------------------------------------------ */
+
+export const ALL_BLOG_POSTS_QUERY = `
+  *[_type == "blogPost"] | order(dateWritten desc) {
+    name,
+    "slug": slug.current,
+    content,
+    featuredSnippet,
+    "imageUrl": image.asset->url,
+    image,
+    dateWritten,
+    featuredOnHome
+  }
+`;
+
+export const BLOG_POST_BY_SLUG_QUERY = `
+  *[_type == "blogPost" && slug.current == $slug][0] {
+    name,
+    "slug": slug.current,
+    content,
+    featuredSnippet,
+    "imageUrl": image.asset->url,
+    image,
+    dateWritten,
+    featuredOnHome
+  }
+`;
+
+export const BLOG_SLUGS_QUERY = `
+  *[_type == "blogPost"]{ "slug": slug.current }
+`;
+
+/* ------------------------------------------------------------------ */
+/*  Events                                                             */
+/* ------------------------------------------------------------------ */
+
+export const ALL_EVENTS_QUERY = `
+  *[_type == "event"] | order(startTime desc) {
+    name,
+    "slug": slug.current,
+    "imageUrl": image.asset->url,
+    image,
+    description,
+    location,
+    startTime,
+    endTime,
+    registerLink,
+    promoVideo,
+    isKids,
+    isYouth,
+    archived
+  }
+`;
+
+export const EVENT_BY_SLUG_QUERY = `
+  *[_type == "event" && slug.current == $slug][0] {
+    name,
+    "slug": slug.current,
+    "imageUrl": image.asset->url,
+    image,
+    description,
+    location,
+    startTime,
+    endTime,
+    registerLink,
+    promoVideo,
+    isKids,
+    isYouth,
+    archived
+  }
+`;
+
+export const EVENT_SLUGS_QUERY = `
+  *[_type == "event"]{ "slug": slug.current }
+`;
+
+/* ------------------------------------------------------------------ */
+/*  Site Settings                                                      */
+/* ------------------------------------------------------------------ */
+
+export const SITE_SETTINGS_QUERY = `
+  *[_type == "siteSettings"][0] {
+    churchName,
+    phone,
+    email,
+    address,
+    sundayTime,
+    wednesdayTime,
+    welcomeVideoId,
+    giveUrl,
+    facebookUrl,
+    youtubeUrl,
+    heroImage,
+    heroHeading,
+    heroSubtext,
+    ctaHeading,
+    ctaSubtext
+  }
+`;

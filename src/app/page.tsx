@@ -1,8 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { sermons } from "@/data/sermons";
-import { getUpcomingEvents } from "@/data/events";
-import { blogPosts } from "@/data/blog";
+import { client } from "@/sanity/client";
+import {
+  ALL_SERMONS_QUERY,
+  ALL_EVENTS_QUERY,
+  ALL_BLOG_POSTS_QUERY,
+  SITE_SETTINGS_QUERY,
+} from "@/sanity/queries";
+import type { SanitySermon, SanityBlogPost, SanityEvent, SiteSettings } from "@/sanity/types";
+import { getUpcomingEvents } from "@/lib/events";
 
 /* ------------------------------------------------------------------ */
 /*  Helper – format a date string nicely                               */
@@ -18,12 +24,30 @@ function formatDate(iso: string) {
 /* ------------------------------------------------------------------ */
 /*  Home Page                                                          */
 /* ------------------------------------------------------------------ */
-export default function Home() {
+export default async function Home() {
+  const [sermons, allEvents, blogPosts, settings] = await Promise.all([
+    client.fetch<SanitySermon[]>(ALL_SERMONS_QUERY),
+    client.fetch<SanityEvent[]>(ALL_EVENTS_QUERY),
+    client.fetch<SanityBlogPost[]>(ALL_BLOG_POSTS_QUERY),
+    client.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY),
+  ]);
+
   const latestSermon = sermons[0];
-
-  const upcomingEvents = getUpcomingEvents().slice(0, 3);
-
+  const upcomingEvents = getUpcomingEvents(allEvents).slice(0, 3);
   const featuredPosts = blogPosts.filter((p) => p.featuredOnHome);
+
+  // Use settings or sensible defaults
+  const heroHeading = settings?.heroHeading || "Join Us for Service!";
+  const heroSubtext =
+    settings?.heroSubtext ||
+    "We gather each Sunday at 10am & Wednesdays at 7pm. There is a place here for everyone!";
+  const sundayTime = settings?.sundayTime || "10:00 AM";
+  const wednesdayTime = settings?.wednesdayTime || "7:00 PM";
+  const welcomeVideoId = settings?.welcomeVideoId || "oMIh5wfADZg";
+  const ctaHeading = settings?.ctaHeading || "We'd Love to Meet You";
+  const ctaSubtext =
+    settings?.ctaSubtext ||
+    "Whether you are new to faith or have been walking with God for years, there is a place for you at Hope Christian Church. Come as you are and discover a community that feels like family.";
 
   return (
     <>
@@ -63,7 +87,7 @@ export default function Home() {
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 6v6l4 2" />
               </svg>
-              Sundays at 10:00 AM
+              Sundays at {sundayTime}
             </span>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium tracking-wide text-white/90 backdrop-blur-sm font-body">
               <svg
@@ -77,7 +101,7 @@ export default function Home() {
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 6v6l4 2" />
               </svg>
-              Wednesdays at 7:00 PM
+              Wednesdays at {wednesdayTime}
             </span>
           </div>
 
@@ -86,7 +110,7 @@ export default function Home() {
             className="heading-xl max-w-4xl text-white animate-fade-in font-heading"
             style={{ animationDelay: "0.4s", animationFillMode: "both" }}
           >
-            Join Us for Service!
+            {heroHeading}
           </h1>
 
           {/* Subtext */}
@@ -94,8 +118,7 @@ export default function Home() {
             className="body-lg mt-6 max-w-2xl text-white/80 text-balance animate-fade-in font-body"
             style={{ animationDelay: "0.6s", animationFillMode: "both" }}
           >
-            We gather each Sunday at 10am &amp; Wednesdays at 7pm. There is a
-            place here for everyone!
+            {heroSubtext}
           </p>
 
           {/* CTA buttons */}
@@ -147,7 +170,7 @@ export default function Home() {
             <div className="animate-fade-in">
               <div className="relative aspect-video w-full overflow-hidden rounded-xl shadow-2xl shadow-primary/10">
                 <iframe
-                  src="https://www.youtube.com/embed/oMIh5wfADZg"
+                  src={`https://www.youtube.com/embed/${welcomeVideoId}`}
                   title="Welcome to Hope Christian Church"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
@@ -198,66 +221,68 @@ export default function Home() {
       {/* ============================================================
           3. LATEST SERMON SECTION
           ============================================================ */}
-      <section className="section-padding section-padding-y bg-primary text-white">
-        <div className="container-wide">
-          {/* Section header */}
-          <div className="mb-12 text-center">
-            <span className="mb-4 inline-block text-sm font-semibold uppercase tracking-widest text-accent font-body">
-              Latest Message
-            </span>
-            <h2 className="heading-lg text-white font-heading">
-              Watch the Latest Sermon
-            </h2>
-          </div>
+      {latestSermon && (
+        <section className="section-padding section-padding-y bg-primary text-white">
+          <div className="container-wide">
+            {/* Section header */}
+            <div className="mb-12 text-center">
+              <span className="mb-4 inline-block text-sm font-semibold uppercase tracking-widest text-accent font-body">
+                Latest Message
+              </span>
+              <h2 className="heading-lg text-white font-heading">
+                Watch the Latest Sermon
+              </h2>
+            </div>
 
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-            {/* Video */}
-            <div className="animate-fade-in">
-              <div className="relative aspect-video w-full overflow-hidden rounded-xl shadow-2xl">
-                <iframe
-                  src={`https://www.youtube.com/embed/${latestSermon.youtubeVideoId}`}
-                  title={latestSermon.name}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute inset-0 h-full w-full"
-                />
+            <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+              {/* Video */}
+              <div className="animate-fade-in">
+                <div className="relative aspect-video w-full overflow-hidden rounded-xl shadow-2xl">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${latestSermon.youtubeVideoId}`}
+                    title={latestSermon.name}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="absolute inset-0 h-full w-full"
+                  />
+                </div>
+              </div>
+
+              {/* Sermon info */}
+              <div className="animate-fade-in">
+                <p className="text-sm font-medium uppercase tracking-wider text-accent-light font-body">
+                  {formatDate(latestSermon.datePreached)}
+                </p>
+                <h3 className="heading-md mt-3 text-white font-heading">
+                  {latestSermon.name}
+                </h3>
+                <p className="mt-2 text-base text-white/60 font-body">
+                  {latestSermon.speaker}
+                </p>
+                <p className="mt-4 leading-relaxed text-white/75 font-body">
+                  {latestSermon.description}
+                </p>
+                <Link
+                  href="/sermons"
+                  className="btn btn-primary mt-8 inline-flex"
+                >
+                  Watch More
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    aria-hidden="true"
+                  >
+                    <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
               </div>
             </div>
-
-            {/* Sermon info */}
-            <div className="animate-fade-in">
-              <p className="text-sm font-medium uppercase tracking-wider text-accent-light font-body">
-                {formatDate(latestSermon.datePreached)}
-              </p>
-              <h3 className="heading-md mt-3 text-white font-heading">
-                {latestSermon.name}
-              </h3>
-              <p className="mt-2 text-base text-white/60 font-body">
-                {latestSermon.speaker}
-              </p>
-              <p className="mt-4 leading-relaxed text-white/75 font-body">
-                {latestSermon.description}
-              </p>
-              <Link
-                href="/sermons"
-                className="btn btn-primary mt-8 inline-flex"
-              >
-                Watch More
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  aria-hidden="true"
-                >
-                  <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ============================================================
           4. EVENTS PREVIEW SECTION
@@ -458,15 +483,13 @@ export default function Home() {
               className="heading-lg max-w-3xl mx-auto text-white font-heading animate-fade-in"
               style={{ animationDelay: "0.1s", animationFillMode: "both" }}
             >
-              We&apos;d Love to Meet You
+              {ctaHeading}
             </h2>
             <p
               className="body-lg mt-6 max-w-xl mx-auto text-white/85 text-balance font-body animate-fade-in"
               style={{ animationDelay: "0.3s", animationFillMode: "both" }}
             >
-              Whether you are new to faith or have been walking with God for
-              years, there is a place for you at Hope Christian Church. Come as
-              you are and discover a community that feels like family.
+              {ctaSubtext}
             </p>
             <div
               className="mt-10 animate-fade-in"

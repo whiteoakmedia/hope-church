@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { blogPosts } from "@/data/blog";
+import { client } from "@/sanity/client";
+import { ALL_BLOG_POSTS_QUERY } from "@/sanity/queries";
+import type { SanityBlogPost } from "@/sanity/types";
 
 /* ------------------------------------------------------------------ */
 /*  Metadata                                                           */
@@ -34,11 +36,7 @@ function formatDate(iso: string): string {
 /*  Blog Card                                                          */
 /* ------------------------------------------------------------------ */
 
-function BlogCard({
-  post,
-}: {
-  post: (typeof blogPosts)[number];
-}) {
+function BlogCard({ post }: { post: SanityBlogPost }) {
   return (
     <article className="group bg-white rounded-2xl overflow-hidden shadow-[0_2px_20px_rgba(26,35,50,0.06)] hover:shadow-[0_8px_40px_rgba(26,35,50,0.12)] transition-all duration-500 hover:-translate-y-1">
       <Link href={`/blog/${post.slug}`} className="block">
@@ -100,7 +98,9 @@ function BlogCard({
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const blogPosts = await client.fetch<SanityBlogPost[]>(ALL_BLOG_POSTS_QUERY);
+
   const featuredPost = blogPosts.find((p) => p.featuredOnHome);
   const remainingPosts = blogPosts.filter((p) => p !== featuredPost);
 
