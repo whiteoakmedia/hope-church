@@ -1,65 +1,490 @@
 import Image from "next/image";
+import Link from "next/link";
+import { sermons } from "@/data/sermons";
+import { getUpcomingEvents } from "@/data/events";
+import { blogPosts } from "@/data/blog";
 
+/* ------------------------------------------------------------------ */
+/*  Helper – format a date string nicely                               */
+/* ------------------------------------------------------------------ */
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Home Page                                                          */
+/* ------------------------------------------------------------------ */
 export default function Home() {
+  const latestSermon = sermons[0];
+
+  const upcomingEvents = getUpcomingEvents().slice(0, 3);
+
+  const featuredPosts = blogPosts.filter((p) => p.featuredOnHome);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+    <>
+      {/* ============================================================
+          1. HERO SECTION
+          ============================================================ */}
+      <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
+        {/* Background image */}
         <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
+          src="/ChatGPT-Facebook-Photo.jpg"
+          alt="Hope Christian Church worship service"
+          fill
           priority
+          className="object-cover object-center"
+          sizes="100vw"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+
+        {/* Cinematic gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1a2332]/70 via-[#1a2332]/50 to-[#1a2332]/90" />
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col items-center px-6 text-center">
+          {/* Service time badges */}
+          <div
+            className="mb-8 flex flex-wrap items-center justify-center gap-3 animate-fade-in"
+            style={{ animationDelay: "0.2s", animationFillMode: "both" }}
+          >
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium tracking-wide text-white/90 backdrop-blur-sm font-body">
+              <svg
+                className="h-4 w-4 text-[#c8953e]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              Sundays at 10:00 AM
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium tracking-wide text-white/90 backdrop-blur-sm font-body">
+              <svg
+                className="h-4 w-4 text-[#c8953e]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              Wednesdays at 7:00 PM
+            </span>
+          </div>
+
+          {/* Heading */}
+          <h1
+            className="heading-xl max-w-4xl text-white animate-fade-in font-heading"
+            style={{ animationDelay: "0.4s", animationFillMode: "both" }}
+          >
+            Join Us for Service!
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          {/* Subtext */}
+          <p
+            className="body-lg mt-6 max-w-2xl text-white/80 text-balance animate-fade-in font-body"
+            style={{ animationDelay: "0.6s", animationFillMode: "both" }}
+          >
+            We gather each Sunday at 10am &amp; Wednesdays at 7pm. There is a
+            place here for everyone!
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+          {/* CTA buttons */}
+          <div
+            className="mt-10 flex flex-col items-center gap-4 sm:flex-row animate-fade-in"
+            style={{ animationDelay: "0.8s", animationFillMode: "both" }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <Link href="/im-new" className="btn btn-primary px-8 py-3 text-base">
+              I&apos;m New
+            </Link>
+            <Link
+              href="/plan-your-visit"
+              className="btn btn-outline-light px-8 py-3 text-base"
+            >
+              Plan Your Visit
+            </Link>
+          </div>
+
+          {/* Scroll indicator */}
+          <div
+            className="mt-16 animate-fade-in"
+            style={{ animationDelay: "1.2s", animationFillMode: "both" }}
           >
-            Documentation
-          </a>
+            <div className="flex flex-col items-center gap-2 text-white/40">
+              <span className="text-xs uppercase tracking-widest font-body">
+                Scroll
+              </span>
+              <svg
+                className="h-5 w-5 animate-bounce"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* ============================================================
+          2. WELCOME SECTION
+          ============================================================ */}
+      <section className="section-padding section-padding-y bg-bg">
+        <div className="container-wide">
+          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+            {/* YouTube embed */}
+            <div className="animate-fade-in">
+              <div className="relative aspect-video w-full overflow-hidden rounded-xl shadow-2xl shadow-primary/10">
+                <iframe
+                  src="https://www.youtube.com/embed/oMIh5wfADZg"
+                  title="Welcome to Hope Christian Church"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 h-full w-full"
+                />
+              </div>
+            </div>
+
+            {/* Welcome text */}
+            <div className="animate-fade-in">
+              <span className="mb-4 inline-block text-sm font-semibold uppercase tracking-widest text-accent font-body">
+                Welcome Home
+              </span>
+              <h2 className="heading-lg accent-underline text-primary font-heading">
+                A Place for Everyone
+              </h2>
+              <p className="body-lg mt-8 text-text-muted font-body">
+                A praying and worshipping church where you will meet people from
+                all ages and backgrounds gathering together to encounter God.
+              </p>
+              <p className="mt-4 text-text-muted font-body leading-relaxed">
+                At Hope Christian Church in North Haven, CT, we believe that God
+                has a purpose for every person. Whether you are taking your first
+                steps of faith or have walked with God for decades, you will find
+                a warm, welcoming community ready to do life alongside you.
+              </p>
+              <Link
+                href="/what-we-believe"
+                className="btn btn-primary mt-8 inline-flex"
+              >
+                About Us
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          3. LATEST SERMON SECTION
+          ============================================================ */}
+      <section className="section-padding section-padding-y bg-primary text-white">
+        <div className="container-wide">
+          {/* Section header */}
+          <div className="mb-12 text-center">
+            <span className="mb-4 inline-block text-sm font-semibold uppercase tracking-widest text-accent font-body">
+              Latest Message
+            </span>
+            <h2 className="heading-lg text-white font-heading">
+              Watch the Latest Sermon
+            </h2>
+          </div>
+
+          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            {/* Video */}
+            <div className="animate-fade-in">
+              <div className="relative aspect-video w-full overflow-hidden rounded-xl shadow-2xl">
+                <iframe
+                  src={`https://www.youtube.com/embed/${latestSermon.youtubeVideoId}`}
+                  title={latestSermon.name}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 h-full w-full"
+                />
+              </div>
+            </div>
+
+            {/* Sermon info */}
+            <div className="animate-fade-in">
+              <p className="text-sm font-medium uppercase tracking-wider text-accent-light font-body">
+                {formatDate(latestSermon.datePreached)}
+              </p>
+              <h3 className="heading-md mt-3 text-white font-heading">
+                {latestSermon.name}
+              </h3>
+              <p className="mt-2 text-base text-white/60 font-body">
+                {latestSermon.speaker}
+              </p>
+              <p className="mt-4 leading-relaxed text-white/75 font-body">
+                {latestSermon.description}
+              </p>
+              <Link
+                href="/sermons"
+                className="btn btn-primary mt-8 inline-flex"
+              >
+                Watch More
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          4. EVENTS PREVIEW SECTION
+          ============================================================ */}
+      <section className="section-padding section-padding-y bg-bg-alt">
+        <div className="container-wide">
+          {/* Section header */}
+          <div className="mb-12 text-center">
+            <span className="mb-4 inline-block text-sm font-semibold uppercase tracking-widest text-accent font-body">
+              What&apos;s Happening
+            </span>
+            <h2 className="heading-lg text-primary font-heading">
+              Upcoming Events
+            </h2>
+          </div>
+
+          {/* Event cards */}
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {upcomingEvents.map((event, i) => (
+              <Link
+                key={event.slug}
+                href={`/events/${event.slug}`}
+                className="group animate-fade-in overflow-hidden rounded-xl bg-white shadow-lg shadow-primary/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                style={{
+                  animationDelay: `${0.15 * i}s`,
+                  animationFillMode: "both",
+                }}
+              >
+                {/* Event image */}
+                <div className="relative aspect-[16/10] w-full overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={event.imageUrl}
+                    alt={event.name}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                </div>
+
+                {/* Card body */}
+                <div className="p-6">
+                  <h3 className="heading-sm text-primary font-heading leading-snug">
+                    {event.name}
+                  </h3>
+
+                  <div className="mt-4 flex flex-col gap-2">
+                    {/* Location */}
+                    <div className="flex items-start gap-2 text-sm text-text-muted font-body">
+                      <svg
+                        className="mt-0.5 h-4 w-4 shrink-0 text-accent"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span>{event.location}</span>
+                    </div>
+
+                    {/* Date */}
+                    <div className="flex items-start gap-2 text-sm text-text-muted font-body">
+                      <svg
+                        className="mt-0.5 h-4 w-4 shrink-0 text-accent"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                      <span>{formatDate(event.startTime)}</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* View all events */}
+          <div className="mt-12 text-center">
+            <Link href="/events" className="btn btn-outline inline-flex">
+              More Events
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          5. BLOG PREVIEW SECTION
+          ============================================================ */}
+      <section className="section-padding section-padding-y bg-bg">
+        <div className="container-wide">
+          {/* Section header */}
+          <div className="mb-12 text-center">
+            <span className="mb-4 inline-block text-sm font-semibold uppercase tracking-widest text-accent font-body">
+              From Our Blog
+            </span>
+            <h2 className="heading-lg text-primary font-heading">
+              Stories of Faith
+            </h2>
+          </div>
+
+          {/* Blog cards */}
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredPosts.map((post, i) => (
+              <Link
+                key={post.slug}
+                href={`/blog/${post.slug}`}
+                className="group animate-fade-in overflow-hidden rounded-xl bg-white shadow-lg shadow-primary/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                style={{
+                  animationDelay: `${0.15 * i}s`,
+                  animationFillMode: "both",
+                }}
+              >
+                {/* Blog image */}
+                <div className="relative aspect-[16/10] w-full overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={post.imageUrl}
+                    alt={post.name}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+
+                {/* Card body */}
+                <div className="p-6">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-accent font-body">
+                    {formatDate(post.dateWritten)}
+                  </p>
+                  <h3 className="heading-sm mt-2 text-primary font-heading leading-snug">
+                    {post.name}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-text-muted font-body line-clamp-3">
+                    {post.featuredSnippet}
+                  </p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-accent transition-colors group-hover:text-[#b8842e] font-body">
+                    Read More
+                    <svg
+                      className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* View all posts */}
+          <div className="mt-12 text-center">
+            <Link href="/blog" className="btn btn-outline inline-flex">
+              View All Posts
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          6. CTA SECTION
+          ============================================================ */}
+      <section className="relative overflow-hidden">
+        {/* Warm background with texture */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#c8953e] via-[#b8842e] to-[#a87324]" />
+        <div className="absolute inset-0 bg-[url('/Gospel-Praying-Hands.jpg')] bg-cover bg-center opacity-10" />
+
+        <div className="relative z-10 section-padding section-padding-y">
+          <div className="container-wide text-center">
+            <h2
+              className="heading-lg max-w-3xl mx-auto text-white font-heading animate-fade-in"
+              style={{ animationDelay: "0.1s", animationFillMode: "both" }}
+            >
+              We&apos;d Love to Meet You
+            </h2>
+            <p
+              className="body-lg mt-6 max-w-xl mx-auto text-white/85 text-balance font-body animate-fade-in"
+              style={{ animationDelay: "0.3s", animationFillMode: "both" }}
+            >
+              Whether you are new to faith or have been walking with God for
+              years, there is a place for you at Hope Christian Church. Come as
+              you are and discover a community that feels like family.
+            </p>
+            <div
+              className="mt-10 animate-fade-in"
+              style={{ animationDelay: "0.5s", animationFillMode: "both" }}
+            >
+              <Link
+                href="/plan-your-visit"
+                className="btn inline-flex items-center gap-2 bg-white px-8 py-3 text-base font-semibold text-[#1a2332] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20"
+              >
+                Plan Your Visit
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
