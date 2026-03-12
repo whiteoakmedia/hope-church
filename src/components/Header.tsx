@@ -29,7 +29,7 @@ const NAV_ITEMS: NavItem[] = [
     label: "About Us",
     dropdown: [
       { label: "Leadership", href: "/leadership" },
-      { label: "Beliefs", href: "/beliefs" },
+      { label: "Beliefs", href: "/what-we-believe" },
       { label: "Knowing Christ", href: "/knowing-christ" },
     ],
   },
