@@ -185,7 +185,7 @@ export default function Header() {
   /* -- Computed styles -------------------------------------------- */
   const headerBg = scrolled
     ? "bg-white/95 backdrop-blur-md shadow-[0_1px_0_rgba(0,0,0,0.06)]"
-    : "bg-transparent";
+    : "bg-gradient-to-b from-[#1a2332]/60 to-transparent";
 
   const textColor = scrolled ? "text-[#1a2332]" : "text-white";
   const logoFilter = scrolled ? "" : "brightness-0 invert";
