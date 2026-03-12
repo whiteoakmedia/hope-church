@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { DM_Sans, DM_Serif_Display } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -27,6 +28,7 @@ const dmSerifDisplay = DM_Serif_Display({
 /* ------------------------------------------------------------------ */
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://hopeag.com"),
   title: {
     default: "Hope Christian Church | North Haven, CT",
     template: "%s | Hope Christian Church",
@@ -47,11 +49,40 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Hope Christian Church | North Haven, CT",
     description:
-      "A welcoming, Christ-centered community in North Haven, Connecticut.",
+      "A welcoming, Christ-centered community in North Haven, Connecticut. Join us Sundays at 10 AM and Wednesdays at 7 PM.",
     type: "website",
     locale: "en_US",
     siteName: "Hope Christian Church",
+    images: [{ url: "/ChatGPT-Facebook-Photo.jpg", width: 1200, height: 630, alt: "Hope Christian Church" }],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Hope Christian Church | North Haven, CT",
+    description:
+      "A welcoming, Christ-centered community in North Haven, Connecticut. Join us Sundays at 10 AM and Wednesdays at 7 PM.",
+    images: ["/ChatGPT-Facebook-Photo.jpg"],
+  },
+};
+
+const churchJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Church",
+  name: "Hope Christian Church",
+  url: "https://hopeag.com",
+  logo: "https://hopeag.com/ope.png",
+  image: "https://hopeag.com/ChatGPT-Facebook-Photo.jpg",
+  description:
+    "Hope Christian Church is a welcoming, Christ-centered community in North Haven, Connecticut.",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "North Haven",
+    addressRegion: "CT",
+    addressCountry: "US",
+  },
+  telephone: "(203) 234-7328",
+  sameAs: [
+    "https://youtube.com/@hopechristianct",
+  ],
 };
 
 /* ------------------------------------------------------------------ */
@@ -66,8 +97,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSans.variable} ${dmSerifDisplay.variable}`}>
       <body className="font-body bg-bg text-text antialiased">
+        <Script
+          id="church-jsonld"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(churchJsonLd) }}
+        />
         <Header />
-        <main className="min-h-screen">{children}</main>
+        <main id="main-content" className="min-h-screen">{children}</main>
         <Footer />
       </body>
     </html>

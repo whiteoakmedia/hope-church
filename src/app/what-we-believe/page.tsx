@@ -7,7 +7,12 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "What We Believe",
   description:
-    "Discover the core beliefs and doctrinal foundations of Hope Christian Church, rooted in Scripture and the Assemblies of God tradition.",
+    "Discover the core beliefs and doctrinal foundations of Hope Christian Church, rooted in Scripture and the Assemblies of God tradition. Our faith shapes everything we do.",
+  openGraph: {
+    title: "What We Believe",
+    description:
+      "Discover the core beliefs and doctrinal foundations of Hope Christian Church, rooted in Scripture and the Assemblies of God tradition.",
+  },
 };
 
 /* ------------------------------------------------------------------ */

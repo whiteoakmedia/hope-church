@@ -5,6 +5,11 @@ export const metadata: Metadata = {
   title: "I'm New",
   description:
     "Welcome to Hope Christian Church! Learn what to expect on your first visit and discover a warm, Christ-centered community in North Haven, CT.",
+  openGraph: {
+    title: "I'm New — Hope Christian Church",
+    description:
+      "Welcome to Hope Christian Church! Learn what to expect on your first visit and discover a warm community in North Haven, CT.",
+  },
 };
 
 export default function ImNewPage() {

@@ -166,8 +166,31 @@ export default async function EventDetailPage({
     ? extractYouTubeId(event.promoVideo)
     : null;
 
+  const eventJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: event.name,
+    description: event.description,
+    startDate: event.startTime,
+    endDate: event.endTime || event.startTime,
+    image: event.imageUrl,
+    location: {
+      "@type": "Place",
+      name: event.location,
+    },
+    organizer: {
+      "@type": "Organization",
+      name: "Hope Christian Church",
+      url: "https://hopeag.com",
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }}
+      />
       {/* ============================================================ */}
       {/*  Hero / Back Navigation                                        */}
       {/* ============================================================ */}

@@ -5,6 +5,11 @@ export const metadata: Metadata = {
   title: "Hope Kids",
   description:
     "Hope Kids is the children's ministry of Hope Christian Church. A fun, safe, and engaging service designed just for kids to learn about Jesus.",
+  openGraph: {
+    title: "Hope Kids",
+    description:
+      "Hope Kids is the children's ministry of Hope Christian Church. A fun, safe, and engaging service designed just for kids.",
+  },
 };
 
 export default function HopeKidsPage() {

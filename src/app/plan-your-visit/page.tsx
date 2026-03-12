@@ -41,7 +41,7 @@ export default function PlanYourVisitPage() {
           <div className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(26,35,50,0.08)] border border-[#f0ece4] p-8 md:p-12">
             {submitted ? (
               /* ---- Success State ---- */
-              <div className="text-center py-12 animate-fade-in">
+              <div className="text-center py-12 animate-fade-in" role="status" aria-live="polite">
                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#c8953e]/10 flex items-center justify-center">
                   <svg
                     width="40"

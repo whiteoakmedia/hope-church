@@ -8,7 +8,12 @@ import Image from "next/image";
 export const metadata: Metadata = {
   title: "Knowing Christ",
   description:
-    "Begin a personal relationship with Jesus Christ. Learn how to find peace, hope, and salvation through faith.",
+    "Begin a personal relationship with Jesus Christ. Learn how to find peace, hope, and salvation through faith at Hope Christian Church in North Haven, CT.",
+  openGraph: {
+    title: "Knowing Christ",
+    description:
+      "Begin a personal relationship with Jesus Christ. Learn how to find peace, hope, and salvation through faith.",
+  },
 };
 
 /* ------------------------------------------------------------------ */

@@ -9,7 +9,12 @@ import { getUpcomingEvents, getPastEvents } from "@/data/events";
 export const metadata: Metadata = {
   title: "Events",
   description:
-    "Discover upcoming events, gatherings, and activities at Hope Christian Church in North Haven, CT.",
+    "Discover upcoming events, gatherings, and activities at Hope Christian Church in North Haven, CT. Join us for fellowship, worship, and community outreach.",
+  openGraph: {
+    title: "Events",
+    description:
+      "Discover upcoming events, gatherings, and activities at Hope Christian Church in North Haven, CT.",
+  },
 };
 
 /* ------------------------------------------------------------------ */

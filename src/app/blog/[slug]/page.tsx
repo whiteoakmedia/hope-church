@@ -27,6 +27,12 @@ export async function generateMetadata({
   return {
     title: post.name,
     description: post.featuredSnippet,
+    openGraph: {
+      title: post.name,
+      description: post.featuredSnippet,
+      type: "article",
+      images: post.imageUrl ? [{ url: post.imageUrl }] : undefined,
+    },
   };
 }
 
@@ -59,8 +65,30 @@ export default async function BlogDetailPage({
     .filter((p) => p.slug !== slug)
     .slice(0, 2);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.name,
+    description: post.featuredSnippet,
+    image: post.imageUrl,
+    datePublished: post.dateWritten,
+    author: {
+      "@type": "Organization",
+      name: "Hope Christian Church",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Hope Christian Church",
+      logo: { "@type": "ImageObject", url: "https://hopeag.com/ope.png" },
+    },
+  };
+
   return (
     <div className="bg-bg min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ---- Hero Image ---- */}
       <section className="relative w-full h-[50vh] md:h-[60vh] min-h-[400px]">
         <Image

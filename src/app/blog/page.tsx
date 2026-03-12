@@ -10,7 +10,12 @@ import { blogPosts } from "@/data/blog";
 export const metadata: Metadata = {
   title: "Chaplain's Blog",
   description:
-    "Read the latest reflections, devotionals, and encouragement from our pastor and chaplain at Hope Christian Church.",
+    "Read the latest reflections, devotionals, and encouragement from our pastor and chaplain at Hope Christian Church in North Haven, Connecticut.",
+  openGraph: {
+    title: "Chaplain's Blog",
+    description:
+      "Read the latest reflections, devotionals, and encouragement from our pastor and chaplain at Hope Christian Church.",
+  },
 };
 
 /* ------------------------------------------------------------------ */

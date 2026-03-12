@@ -8,7 +8,12 @@ import Image from "next/image";
 export const metadata: Metadata = {
   title: "Leadership",
   description:
-    "Meet Pastor Jim and Sharon Detweiler, the heart and leadership behind Hope Christian Church in North Haven, CT.",
+    "Meet Pastor Jim and Sharon Detweiler, the heart and leadership behind Hope Christian Church in North Haven, CT. Learn about their ministry and vision.",
+  openGraph: {
+    title: "Leadership",
+    description:
+      "Meet Pastor Jim and Sharon Detweiler, the heart and leadership behind Hope Christian Church in North Haven, CT.",
+  },
 };
 
 /* ------------------------------------------------------------------ */

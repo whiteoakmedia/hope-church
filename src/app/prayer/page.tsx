@@ -4,7 +4,12 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Prayer",
   description:
-    "Prayer is the DNA of every ministry at Hope Christian Church. Submit a prayer request or learn about our prayer ministry.",
+    "Prayer is the DNA of every ministry at Hope Christian Church. Submit a prayer request or learn about our prayer gatherings and intercessory ministry in North Haven, CT.",
+  openGraph: {
+    title: "Prayer",
+    description:
+      "Prayer is the DNA of every ministry at Hope Christian Church. Submit a prayer request or learn about our prayer ministry.",
+  },
 };
 
 export default function PrayerPage() {
