@@ -30,6 +30,20 @@ export const SERMON_SLUGS_QUERY = `
   *[_type == "sermon"]{ "slug": slug.current }
 `;
 
+/* Used by CRON sync to match existing sermons by YouTube video ID */
+export const SERMONS_BY_VIDEO_IDS_QUERY = `
+  *[_type == "sermon" && youtubeVideoId in $videoIds] {
+    _id,
+    name,
+    description,
+    youtubeVideoId
+  }
+`;
+
+export const SERMON_SLUG_EXISTS_QUERY = `
+  count(*[_type == "sermon" && slug.current == $slug]) > 0
+`;
+
 /* ------------------------------------------------------------------ */
 /*  Blog Posts                                                         */
 /* ------------------------------------------------------------------ */
