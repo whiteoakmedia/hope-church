@@ -3,6 +3,7 @@ import { writeClient } from "@/sanity/write-client";
 import {
   SERMONS_BY_VIDEO_IDS_QUERY,
   SERMON_SLUG_EXISTS_QUERY,
+  ALL_SYNCED_SERMONS_QUERY,
 } from "@/sanity/queries";
 import { fetchPlaylistVideos, type YouTubeVideo } from "@/lib/youtube";
 
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
     // 4. Find existing sermons that match these video IDs
     const videoIds = videos.map((v) => v.videoId);
     const existingSermons = await writeClient.fetch<
-      { _id: string; name: string; description: string; youtubeVideoId: string }[]
+      { _id: string; name: string; description: string; youtubeVideoId: string; datePreached: string }[]
     >(SERMONS_BY_VIDEO_IDS_QUERY, { videoIds });
 
     const existingMap = new Map(
@@ -117,13 +118,15 @@ export async function GET(request: NextRequest) {
         created++;
       } else if (
         existing.name !== video.title ||
-        (existing.description || "") !== (video.description || "")
+        (existing.description || "") !== (video.description || "") ||
+        existing.datePreached !== video.publishedAt
       ) {
-        // Title or description changed — update it
+        // Title, description, or date changed — update it
         transaction.patch(existing._id, (patch) =>
           patch.set({
             name: video.title,
             description: video.description || "",
+            datePreached: video.publishedAt,
           })
         );
         updated++;
@@ -132,8 +135,24 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 6. Commit the transaction (only if there are operations)
-    if (created > 0 || updated > 0) {
+    // 6. Archive sermons no longer in the playlist
+    const playlistVideoIds = new Set(videos.map((v) => v.videoId));
+    const allSyncedSermons = await writeClient.fetch<
+      { _id: string; youtubeVideoId: string }[]
+    >(ALL_SYNCED_SERMONS_QUERY);
+
+    let archived = 0;
+    for (const sermon of allSyncedSermons) {
+      if (!playlistVideoIds.has(sermon.youtubeVideoId)) {
+        transaction.patch(sermon._id, (patch) =>
+          patch.set({ archived: true })
+        );
+        archived++;
+      }
+    }
+
+    // 7. Commit the transaction (only if there are operations)
+    if (created > 0 || updated > 0 || archived > 0) {
       await transaction.commit();
     }
 
@@ -142,6 +161,7 @@ export async function GET(request: NextRequest) {
       created,
       updated,
       skipped,
+      archived,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

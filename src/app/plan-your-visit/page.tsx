@@ -6,15 +6,37 @@ export default function PlanYourVisitPage() {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError("");
 
-    // Simulate a short delay for UX feel
-    setTimeout(() => {
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    data.append("access_key", process.env.NEXT_PUBLIC_WEB3FORMS_KEY || "");
+    data.append("subject", "New Plan Your Visit Submission");
+    data.append("from_name", "Hope Church Website");
+
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: data,
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        setSubmitted(true);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
       setIsSubmitting(false);
-      setSubmitted(true);
-    }, 600);
+    }
   };
 
   return (
@@ -196,6 +218,10 @@ export default function PlanYourVisitPage() {
                     )}
                   </button>
                 </div>
+
+                {error && (
+                  <p className="text-red-600 text-sm text-center mt-4">{error}</p>
+                )}
               </form>
             )}
           </div>

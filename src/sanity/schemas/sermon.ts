@@ -49,6 +49,14 @@ export const sermon = defineType({
       type: "datetime",
       validation: (Rule) => Rule.required(),
     }),
+    defineField({
+      name: "archived",
+      title: "Archived",
+      type: "boolean",
+      description:
+        "Archived sermons are hidden from the site. The YouTube sync will auto-archive sermons removed from the playlist.",
+      initialValue: false,
+    }),
   ],
   orderings: [
     {

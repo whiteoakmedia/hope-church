@@ -3,7 +3,7 @@
 /* ------------------------------------------------------------------ */
 
 export const ALL_SERMONS_QUERY = `
-  *[_type == "sermon"] | order(datePreached desc) {
+  *[_type == "sermon" && archived != true] | order(datePreached desc) {
     name,
     "slug": slug.current,
     speaker,
@@ -27,7 +27,7 @@ export const SERMON_BY_SLUG_QUERY = `
 `;
 
 export const SERMON_SLUGS_QUERY = `
-  *[_type == "sermon"]{ "slug": slug.current }
+  *[_type == "sermon" && archived != true]{ "slug": slug.current }
 `;
 
 /* Used by CRON sync to match existing sermons by YouTube video ID */
@@ -36,12 +36,21 @@ export const SERMONS_BY_VIDEO_IDS_QUERY = `
     _id,
     name,
     description,
-    youtubeVideoId
+    youtubeVideoId,
+    datePreached
   }
 `;
 
 export const SERMON_SLUG_EXISTS_QUERY = `
   count(*[_type == "sermon" && slug.current == $slug]) > 0
+`;
+
+/* All non-archived sermons with a video ID (for archive detection) */
+export const ALL_SYNCED_SERMONS_QUERY = `
+  *[_type == "sermon" && defined(youtubeVideoId) && archived != true] {
+    _id,
+    youtubeVideoId
+  }
 `;
 
 /* ------------------------------------------------------------------ */
