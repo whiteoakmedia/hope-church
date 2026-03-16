@@ -13,6 +13,7 @@
     "@sanity/client": "^7.17.0",
     "@sanity/image-url": "^2.0.3",
     "@sanity/vision": "^5.14.1",
+    "@whiteoakmedia/sanity-schemas": "file:../Obsidian/White Oak Media/SchemaTemplate/packages/sanity-schemas",
     "next": "16.1.6",
     "next-sanity": "^12.1.1",
     "react": "19.2.3",

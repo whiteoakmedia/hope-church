@@ -1,18 +1,18 @@
 import type { MetadataRoute } from "next";
 import { client } from "@/sanity/client";
 import {
-  BLOG_SLUGS_QUERY,
-  EVENT_SLUGS_QUERY,
-  SERMON_SLUGS_QUERY,
+  blogSlugsQuery,
+  eventSlugsQuery,
+  sermonSlugsQuery,
 } from "@/sanity/queries";
 
 const BASE = "https://hopeag.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [blogSlugs, eventSlugs, sermonSlugs] = await Promise.all([
-    client.fetch<{ slug: string }[]>(BLOG_SLUGS_QUERY),
-    client.fetch<{ slug: string }[]>(EVENT_SLUGS_QUERY),
-    client.fetch<{ slug: string }[]>(SERMON_SLUGS_QUERY),
+    client.fetch<{ slug: string }[]>(blogSlugsQuery),
+    client.fetch<{ slug: string }[]>(eventSlugsQuery),
+    client.fetch<{ slug: string }[]>(sermonSlugsQuery),
   ]);
 
   const staticPages: MetadataRoute.Sitemap = [

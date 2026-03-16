@@ -1,14 +1,39 @@
-import type { PortableTextBlock } from "@portabletext/types";
+/* ------------------------------------------------------------------ */
+/*  Re-export all types from SchemaTemplate                            */
+/* ------------------------------------------------------------------ */
 
-export interface SanitySermon {
-  name: string;
-  slug: string;
-  speaker: string;
-  youtubeUrl: string;
-  youtubeVideoId: string;
-  description: string;
-  datePreached: string;
-}
+export type {
+  SanityImage,
+  PortableText,
+  ServiceTime,
+  Address,
+  CoreValue,
+  SiteSettings,
+  CtaButton,
+  Cta,
+  GalleryImage,
+  HomeSection,
+  HomePage,
+  Belief,
+  AboutPage,
+  WayToGive,
+  GivingPage,
+  ContactPage,
+  EventsPage,
+  StaffPage,
+  Event,
+  StaffReference,
+  Sermon,
+  Ministry,
+  Staff,
+} from "@whiteoakmedia/sanity-schemas";
+
+/* ------------------------------------------------------------------ */
+/*  Hope Church – specific types (not in SchemaTemplate)               */
+/* ------------------------------------------------------------------ */
+
+import type { PortableTextBlock } from "@portabletext/types";
+import type { SanityImage } from "@whiteoakmedia/sanity-schemas";
 
 export interface SanityBlogPost {
   name: string;
@@ -19,43 +44,4 @@ export interface SanityBlogPost {
   image: SanityImage;
   dateWritten: string;
   featuredOnHome: boolean;
-}
-
-export interface SanityEvent {
-  name: string;
-  slug: string;
-  imageUrl: string;
-  image: SanityImage;
-  description: string;
-  location: string;
-  startTime: string;
-  endTime?: string;
-  registerLink?: string;
-  promoVideo?: string;
-  isKids: boolean;
-  isYouth: boolean;
-  archived: boolean;
-}
-
-export interface SanityImage {
-  asset: { _ref: string; _type: string };
-  hotspot?: { x: number; y: number; height: number; width: number };
-}
-
-export interface SiteSettings {
-  churchName: string;
-  phone: string;
-  email: string;
-  address: string;
-  sundayTime: string;
-  wednesdayTime: string;
-  welcomeVideoId: string;
-  giveUrl: string;
-  facebookUrl: string;
-  youtubeUrl: string;
-  heroImage: SanityImage;
-  heroHeading: string;
-  heroSubtext: string;
-  ctaHeading: string;
-  ctaSubtext: string;
 }

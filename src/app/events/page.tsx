@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { client } from "@/sanity/client";
-import { ALL_EVENTS_QUERY } from "@/sanity/queries";
-import type { SanityEvent } from "@/sanity/types";
+import { eventsQuery } from "@/sanity/queries";
+import type { Event } from "@/sanity/types";
+import { urlFor } from "@/sanity/image";
 import { getUpcomingEvents, getPastEvents } from "@/lib/events";
 
 /* ------------------------------------------------------------------ */
@@ -120,7 +121,22 @@ function ArrowRightIcon() {
 /* ------------------------------------------------------------------ */
 
 export default async function EventsPage() {
-  const allEvents = await client.fetch<SanityEvent[]>(ALL_EVENTS_QUERY);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function descriptionToString(desc: any): string {
+    if (!desc) return "";
+    if (typeof desc === "string") return desc;
+    if (Array.isArray(desc)) {
+      return desc
+        .filter((b: { _type?: string }) => b._type === "block")
+        .map((b: { children?: { text?: string }[] }) =>
+          (b.children || []).map((c) => c.text || "").join("")
+        )
+        .join(" ");
+    }
+    return "";
+  }
+
+  const allEvents = await client.fetch<Event[]>(eventsQuery);
   const upcomingEvents = getUpcomingEvents(allEvents);
   const pastEvents = getPastEvents(allEvents);
 
@@ -169,35 +185,30 @@ export default async function EventsPage() {
                     {/* Event image */}
                     <div className="md:col-span-2 relative aspect-[16/10] md:aspect-auto overflow-hidden">
                       <img
-                        src={event.imageUrl}
-                        alt={event.name}
+                        src={event.image ? urlFor(event.image).url() : ""}
+                        alt={event.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      {/* Badges */}
-                      <div className="absolute top-4 left-4 flex gap-2">
-                        {event.isKids && (
+                      {/* Category badge */}
+                      {event.category && (
+                        <div className="absolute top-4 left-4 flex gap-2">
                           <span className="px-3 py-1 rounded-full bg-[#5B8DEF] text-white text-xs font-semibold uppercase tracking-wide">
-                            Kids
+                            {event.category}
                           </span>
-                        )}
-                        {event.isYouth && (
-                          <span className="px-3 py-1 rounded-full bg-[#8B5CF6] text-white text-xs font-semibold uppercase tracking-wide">
-                            Youth
-                          </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Event details */}
                     <div className="md:col-span-3 p-6 md:p-8 flex flex-col justify-center">
                       <h3 className="font-heading heading-sm text-primary mb-3 group-hover:text-accent transition-colors duration-200">
-                        {event.name}
+                        {event.title}
                       </h3>
 
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center gap-2 text-text-muted text-sm">
                           <CalendarIcon className="text-accent shrink-0" />
-                          <span>{formatEventDate(event.startTime, event.endTime)}</span>
+                          <span>{formatEventDate(event.date, event.endDate ?? undefined)}</span>
                         </div>
                         <div className="flex items-start gap-2 text-text-muted text-sm">
                           <MapPinIcon className="text-accent shrink-0 mt-0.5" />
@@ -207,7 +218,7 @@ export default async function EventsPage() {
 
                       {event.description && (
                         <p className="text-text-muted leading-relaxed mb-6">
-                          {event.description}
+                          {descriptionToString(event.description)}
                         </p>
                       )}
 
@@ -219,9 +230,9 @@ export default async function EventsPage() {
                           View Details
                           <ArrowRightIcon />
                         </Link>
-                        {event.registerLink && (
+                        {event.registrationLink && (
                           <a
-                            href={event.registerLink}
+                            href={event.registrationLink}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="btn btn-primary text-sm"
@@ -292,8 +303,8 @@ export default async function EventsPage() {
                   {/* Image */}
                   <div className="relative aspect-video overflow-hidden">
                     <img
-                      src={event.imageUrl}
-                      alt={event.name}
+                      src={event.image ? urlFor(event.image).url() : ""}
+                      alt={event.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 grayscale-[30%] group-hover:grayscale-0"
                     />
                     <div className="absolute top-3 right-3">
@@ -306,11 +317,11 @@ export default async function EventsPage() {
                   {/* Content */}
                   <div className="p-5">
                     <h3 className="font-heading text-primary text-lg mb-2 group-hover:text-accent transition-colors duration-200">
-                      {event.name}
+                      {event.title}
                     </h3>
                     <div className="flex items-center gap-2 text-text-muted text-sm mb-2">
                       <CalendarIcon className="text-text-light shrink-0" />
-                      <span>{formatShortDate(event.startTime)}</span>
+                      <span>{formatShortDate(event.date)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-text-muted text-sm">
                       <MapPinIcon className="text-text-light shrink-0" />

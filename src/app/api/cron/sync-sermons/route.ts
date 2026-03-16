@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeClient } from "@/sanity/write-client";
 import {
-  SERMONS_BY_VIDEO_IDS_QUERY,
-  SERMON_SLUG_EXISTS_QUERY,
-  ALL_SYNCED_SERMONS_QUERY,
+  sermonsByVideoIdsQuery,
+  sermonSlugExistsQuery,
+  allSyncedSermonsQuery,
 } from "@/sanity/queries";
 import { fetchPlaylistVideos, type YouTubeVideo } from "@/lib/youtube";
 
@@ -27,7 +27,7 @@ async function uniqueSlug(base: string): Promise<string> {
   let suffix = 2;
 
   while (
-    await writeClient.fetch<boolean>(SERMON_SLUG_EXISTS_QUERY, { slug })
+    await writeClient.fetch<boolean>(sermonSlugExistsQuery, { slug })
   ) {
     slug = `${base.slice(0, 92)}-${suffix}`;
     suffix++;
@@ -80,14 +80,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 4. Find existing sermons that match these video IDs
-    const videoIds = videos.map((v) => v.videoId);
+    // 4. Find existing sermons that match these video URLs
+    const videoUrls = videos.map((v) => v.youtubeUrl);
     const existingSermons = await writeClient.fetch<
-      { _id: string; name: string; description: string; youtubeVideoId: string; datePreached: string }[]
-    >(SERMONS_BY_VIDEO_IDS_QUERY, { videoIds });
+      { _id: string; title: string; description: string; videoUrl: string; date: string }[]
+    >(sermonsByVideoIdsQuery, { videoIds: videoUrls });
 
     const existingMap = new Map(
-      existingSermons.map((s) => [s.youtubeVideoId, s])
+      existingSermons.map((s) => [s.videoUrl, s])
     );
 
     // 5. Classify each video and build a transaction
@@ -97,36 +97,32 @@ export async function GET(request: NextRequest) {
     let skipped = 0;
 
     for (const video of videos) {
-      const existing = existingMap.get(video.videoId);
+      const existing = existingMap.get(video.youtubeUrl);
 
       if (!existing) {
         // New sermon — create it
         const slug = await uniqueSlug(slugify(video.title));
-        const speaker =
-          process.env.DEFAULT_SERMON_SPEAKER || "Pastor";
 
         transaction.create({
           _type: "sermon",
-          name: video.title,
+          title: video.title,
           slug: { _type: "slug", current: slug },
-          speaker,
-          youtubeUrl: video.youtubeUrl,
-          youtubeVideoId: video.videoId,
+          videoUrl: video.youtubeUrl,
           description: video.description || "",
-          datePreached: video.publishedAt,
+          date: video.publishedAt,
         });
         created++;
       } else if (
-        existing.name !== video.title ||
+        existing.title !== video.title ||
         (existing.description || "") !== (video.description || "") ||
-        existing.datePreached !== video.publishedAt
+        existing.date !== video.publishedAt
       ) {
         // Title, description, or date changed — update it
         transaction.patch(existing._id, (patch) =>
           patch.set({
-            name: video.title,
+            title: video.title,
             description: video.description || "",
-            datePreached: video.publishedAt,
+            date: video.publishedAt,
           })
         );
         updated++;
@@ -136,14 +132,14 @@ export async function GET(request: NextRequest) {
     }
 
     // 6. Archive sermons no longer in the playlist
-    const playlistVideoIds = new Set(videos.map((v) => v.videoId));
+    const playlistVideoUrls = new Set(videos.map((v) => v.youtubeUrl));
     const allSyncedSermons = await writeClient.fetch<
-      { _id: string; youtubeVideoId: string }[]
-    >(ALL_SYNCED_SERMONS_QUERY);
+      { _id: string; videoUrl: string }[]
+    >(allSyncedSermonsQuery);
 
     let archived = 0;
     for (const sermon of allSyncedSermons) {
-      if (!playlistVideoIds.has(sermon.youtubeVideoId)) {
+      if (!playlistVideoUrls.has(sermon.videoUrl)) {
         transaction.patch(sermon._id, (patch) =>
           patch.set({ archived: true })
         );

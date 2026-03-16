@@ -4,9 +4,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { client } from "@/sanity/client";
 import {
-  BLOG_POST_BY_SLUG_QUERY,
-  BLOG_SLUGS_QUERY,
-  ALL_BLOG_POSTS_QUERY,
+  blogPostBySlugQuery,
+  blogSlugsQuery,
+  blogPostsQuery,
 } from "@/sanity/queries";
 import type { SanityBlogPost } from "@/sanity/types";
 import PortableTextRenderer from "@/components/PortableTextRenderer";
@@ -16,7 +16,7 @@ import PortableTextRenderer from "@/components/PortableTextRenderer";
 /* ------------------------------------------------------------------ */
 
 export async function generateStaticParams() {
-  const slugs = await client.fetch<{ slug: string }[]>(BLOG_SLUGS_QUERY);
+  const slugs = await client.fetch<{ slug: string }[]>(blogSlugsQuery);
   return slugs.map((s) => ({ slug: s.slug }));
 }
 
@@ -31,7 +31,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const post = await client.fetch<SanityBlogPost | null>(
-    BLOG_POST_BY_SLUG_QUERY,
+    blogPostBySlugQuery,
     { slug }
   );
   if (!post) return { title: "Post Not Found" };
@@ -70,12 +70,12 @@ export default async function BlogDetailPage({
 }) {
   const { slug } = await params;
   const post = await client.fetch<SanityBlogPost | null>(
-    BLOG_POST_BY_SLUG_QUERY,
+    blogPostBySlugQuery,
     { slug }
   );
   if (!post) notFound();
 
-  const allPosts = await client.fetch<SanityBlogPost[]>(ALL_BLOG_POSTS_QUERY);
+  const allPosts = await client.fetch<SanityBlogPost[]>(blogPostsQuery);
   const relatedPosts = allPosts.filter((p) => p.slug !== slug).slice(0, 2);
 
   const jsonLd = {

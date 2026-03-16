@@ -1,63 +1,107 @@
 /* ------------------------------------------------------------------ */
-/*  Sermons                                                            */
+/*  Re-export all standard queries from SchemaTemplate                 */
 /* ------------------------------------------------------------------ */
 
-export const ALL_SERMONS_QUERY = `
-  *[_type == "sermon" && archived != true] | order(datePreached desc) {
-    name,
-    "slug": slug.current,
-    speaker,
-    youtubeUrl,
-    youtubeVideoId,
-    description,
-    datePreached
-  }
-`;
+export {
+  siteSettingsQuery,
+  homePageQuery,
+  aboutPageQuery,
+  givingPageQuery,
+  contactPageQuery,
+  eventsPageQuery,
+  staffPageQuery,
+  eventsQuery,
+  upcomingEventsQuery,
+  featuredEventsQuery,
+  sermonsQuery,
+  latestSermonQuery,
+  sermonsBySeriesQuery,
+  ministriesQuery,
+  staffQuery,
+} from "@whiteoakmedia/sanity-schemas";
 
-export const SERMON_BY_SLUG_QUERY = `
-  *[_type == "sermon" && slug.current == $slug][0] {
-    name,
-    "slug": slug.current,
-    speaker,
-    youtubeUrl,
-    youtubeVideoId,
-    description,
-    datePreached
-  }
-`;
+/* ------------------------------------------------------------------ */
+/*  Hope Church – specific queries (not in SchemaTemplate)             */
+/* ------------------------------------------------------------------ */
 
-export const SERMON_SLUGS_QUERY = `
-  *[_type == "sermon" && archived != true]{ "slug": slug.current }
-`;
+const imageFields = `asset->{ _id, url, metadata { dimensions, lqip } }, hotspot, crop, alt`;
+const portableTextField = `[]{ ..., markDefs[]{ ... } }`;
 
-/* Used by CRON sync to match existing sermons by YouTube video ID */
-export const SERMONS_BY_VIDEO_IDS_QUERY = `
-  *[_type == "sermon" && youtubeVideoId in $videoIds] {
+/* Event detail & slugs */
+
+export const eventBySlugQuery = `
+  *[_type == "event" && slug.current == $slug][0] {
     _id,
-    name,
-    description,
-    youtubeVideoId,
-    datePreached
+    title,
+    "slug": slug.current,
+    date,
+    endDate,
+    timeDisplay,
+    location,
+    category,
+    description ${portableTextField},
+    image { ${imageFields} },
+    registrationLink,
+    featured,
+    recurring,
+    recurrencePattern
   }
 `;
 
-export const SERMON_SLUG_EXISTS_QUERY = `
+export const eventSlugsQuery = `
+  *[_type == "event"]{ "slug": slug.current }
+`;
+
+/* Sermon detail & slugs */
+
+export const sermonBySlugQuery = `
+  *[_type == "sermon" && slug.current == $slug][0] {
+    _id,
+    title,
+    "slug": slug.current,
+    preacher->{ _id, name, role, photo { ${imageFields} } },
+    date,
+    series,
+    scriptureReference,
+    description ${portableTextField},
+    videoUrl,
+    "audioFileUrl": audioFile.asset->url,
+    audioUrl,
+    image { ${imageFields} },
+    order
+  }
+`;
+
+export const sermonSlugsQuery = `
+  *[_type == "sermon"]{ "slug": slug.current }
+`;
+
+/* CRON sync helpers */
+
+export const sermonsByVideoIdsQuery = `
+  *[_type == "sermon" && videoUrl in $videoIds] {
+    _id,
+    title,
+    description,
+    videoUrl,
+    date
+  }
+`;
+
+export const sermonSlugExistsQuery = `
   count(*[_type == "sermon" && slug.current == $slug]) > 0
 `;
 
-/* All non-archived sermons with a video ID (for archive detection) */
-export const ALL_SYNCED_SERMONS_QUERY = `
-  *[_type == "sermon" && defined(youtubeVideoId) && archived != true] {
+export const allSyncedSermonsQuery = `
+  *[_type == "sermon" && defined(videoUrl)] {
     _id,
-    youtubeVideoId
+    videoUrl
   }
 `;
 
-/* ------------------------------------------------------------------ */
-/*  Blog Posts                                                         */
-/* ------------------------------------------------------------------ */
+/* Blog posts (Hope Church unique) */
 
-export const ALL_BLOG_POSTS_QUERY = `
+export const blogPostsQuery = `
   *[_type == "blogPost"] | order(dateWritten desc) {
     name,
     "slug": slug.current,
@@ -70,7 +114,7 @@ export const ALL_BLOG_POSTS_QUERY = `
   }
 `;
 
-export const BLOG_POST_BY_SLUG_QUERY = `
+export const blogPostBySlugQuery = `
   *[_type == "blogPost" && slug.current == $slug][0] {
     name,
     "slug": slug.current,
@@ -83,74 +127,6 @@ export const BLOG_POST_BY_SLUG_QUERY = `
   }
 `;
 
-export const BLOG_SLUGS_QUERY = `
+export const blogSlugsQuery = `
   *[_type == "blogPost"]{ "slug": slug.current }
-`;
-
-/* ------------------------------------------------------------------ */
-/*  Events                                                             */
-/* ------------------------------------------------------------------ */
-
-export const ALL_EVENTS_QUERY = `
-  *[_type == "event"] | order(startTime desc) {
-    name,
-    "slug": slug.current,
-    "imageUrl": image.asset->url,
-    image,
-    description,
-    location,
-    startTime,
-    endTime,
-    registerLink,
-    promoVideo,
-    isKids,
-    isYouth,
-    archived
-  }
-`;
-
-export const EVENT_BY_SLUG_QUERY = `
-  *[_type == "event" && slug.current == $slug][0] {
-    name,
-    "slug": slug.current,
-    "imageUrl": image.asset->url,
-    image,
-    description,
-    location,
-    startTime,
-    endTime,
-    registerLink,
-    promoVideo,
-    isKids,
-    isYouth,
-    archived
-  }
-`;
-
-export const EVENT_SLUGS_QUERY = `
-  *[_type == "event"]{ "slug": slug.current }
-`;
-
-/* ------------------------------------------------------------------ */
-/*  Site Settings                                                      */
-/* ------------------------------------------------------------------ */
-
-export const SITE_SETTINGS_QUERY = `
-  *[_type == "siteSettings"][0] {
-    churchName,
-    phone,
-    email,
-    address,
-    sundayTime,
-    wednesdayTime,
-    welcomeVideoId,
-    giveUrl,
-    facebookUrl,
-    youtubeUrl,
-    heroImage,
-    heroHeading,
-    heroSubtext,
-    ctaHeading,
-    ctaSubtext
-  }
 `;

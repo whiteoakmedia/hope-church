@@ -3,18 +3,41 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { client } from "@/sanity/client";
 import {
-  SERMON_BY_SLUG_QUERY,
-  SERMON_SLUGS_QUERY,
-  ALL_SERMONS_QUERY,
+  sermonBySlugQuery,
+  sermonSlugsQuery,
+  sermonsQuery,
 } from "@/sanity/queries";
-import type { SanitySermon } from "@/sanity/types";
+import type { Sermon } from "@/sanity/types";
+
+/* ------------------------------------------------------------------ */
+/*  Helper – extract YouTube video ID from a URL                       */
+/* ------------------------------------------------------------------ */
+function getYouTubeId(url: string): string {
+  const match = url?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=))([^&?]+)/);
+  return match?.[1] || "";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function descriptionToString(desc: any): string {
+  if (!desc) return "";
+  if (typeof desc === "string") return desc;
+  if (Array.isArray(desc)) {
+    return desc
+      .filter((b: { _type?: string }) => b._type === "block")
+      .map((b: { children?: { text?: string }[] }) =>
+        (b.children || []).map((c) => c.text || "").join("")
+      )
+      .join(" ");
+  }
+  return "";
+}
 
 /* ------------------------------------------------------------------ */
 /*  Static Params                                                      */
 /* ------------------------------------------------------------------ */
 
 export async function generateStaticParams() {
-  const slugs = await client.fetch<{ slug: string }[]>(SERMON_SLUGS_QUERY);
+  const slugs = await client.fetch<{ slug: string }[]>(sermonSlugsQuery);
   return slugs.map((s) => ({ slug: s.slug }));
 }
 
@@ -28,26 +51,27 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const sermon = await client.fetch<SanitySermon | null>(
-    SERMON_BY_SLUG_QUERY,
+  const sermon = await client.fetch<Sermon | null>(
+    sermonBySlugQuery,
     { slug }
   );
   if (!sermon) return { title: "Sermon Not Found" };
 
+  const descText = descriptionToString(sermon.description);
   return {
-    title: sermon.name,
+    title: sermon.title,
     description:
-      sermon.description ||
-      `Watch "${sermon.name}" by ${sermon.speaker}`,
+      descText ||
+      `Watch "${sermon.title}" by ${sermon.preacher?.name || "Unknown"}`,
     openGraph: {
-      title: sermon.name,
+      title: sermon.title,
       description:
-        sermon.description ||
-        `Watch "${sermon.name}" by ${sermon.speaker}`,
+        descText ||
+        `Watch "${sermon.title}" by ${sermon.preacher?.name || "Unknown"}`,
       type: "article",
       images: [
         {
-          url: `https://img.youtube.com/vi/${sermon.youtubeVideoId}/maxresdefault.jpg`,
+          url: `https://img.youtube.com/vi/${getYouTubeId(sermon.videoUrl || "")}/maxresdefault.jpg`,
           width: 1280,
           height: 720,
         },
@@ -99,8 +123,8 @@ export default async function SermonDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const sermon = await client.fetch<SanitySermon | null>(
-    SERMON_BY_SLUG_QUERY,
+  const sermon = await client.fetch<Sermon | null>(
+    sermonBySlugQuery,
     { slug }
   );
 
@@ -109,7 +133,7 @@ export default async function SermonDetailPage({
   }
 
   // Get 3 related sermons (excluding the current one)
-  const allSermons = await client.fetch<SanitySermon[]>(ALL_SERMONS_QUERY);
+  const allSermons = await client.fetch<Sermon[]>(sermonsQuery);
   const relatedSermons = allSermons
     .filter((s) => s.slug !== sermon.slug)
     .slice(0, 3);
@@ -141,8 +165,8 @@ export default async function SermonDetailPage({
           {/* Video embed */}
           <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-[0_8px_32px_rgba(26,35,50,0.15)] mb-8">
             <iframe
-              src={`https://www.youtube.com/embed/${sermon.youtubeVideoId}`}
-              title={sermon.name}
+              src={`https://www.youtube.com/embed/${getYouTubeId(sermon.videoUrl || "")}`}
+              title={sermon.title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="absolute inset-0 w-full h-full"
@@ -152,7 +176,7 @@ export default async function SermonDetailPage({
           {/* Sermon info */}
           <div className="mb-12">
             <h1 className="font-heading heading-lg text-primary mb-4">
-              {sermon.name}
+              {sermon.title}
             </h1>
             <div className="flex flex-wrap items-center gap-3 mb-6">
               <div className="flex items-center gap-2">
@@ -171,7 +195,7 @@ export default async function SermonDetailPage({
                   <circle cx="12" cy="7" r="4" />
                 </svg>
                 <span className="text-accent font-medium">
-                  {sermon.speaker}
+                  {sermon.preacher?.name || "Unknown"}
                 </span>
               </div>
               <span className="w-1 h-1 rounded-full bg-text-light" />
@@ -193,7 +217,7 @@ export default async function SermonDetailPage({
                   <path d="M3 10h18" />
                 </svg>
                 <span className="text-text-muted">
-                  {formatDate(sermon.datePreached)}
+                  {formatDate(sermon.date)}
                 </span>
               </div>
             </div>
@@ -201,14 +225,14 @@ export default async function SermonDetailPage({
             {sermon.description && (
               <div className="bg-white rounded-xl p-6 md:p-8 shadow-[0_2px_12px_rgba(26,35,50,0.06)]">
                 <p className="body-lg text-text-muted leading-relaxed">
-                  {sermon.description}
+                  {descriptionToString(sermon.description)}
                 </p>
               </div>
             )}
 
             <div className="mt-6">
               <a
-                href={sermon.youtubeUrl}
+                href={sermon.videoUrl ?? undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-primary"
@@ -252,8 +276,8 @@ export default async function SermonDetailPage({
                   {/* Thumbnail */}
                   <div className="relative aspect-video overflow-hidden bg-primary/5">
                     <img
-                      src={`https://img.youtube.com/vi/${related.youtubeVideoId}/maxresdefault.jpg`}
-                      alt={related.name}
+                      src={`https://img.youtube.com/vi/${getYouTubeId(related.videoUrl || "")}/maxresdefault.jpg`}
+                      alt={related.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
@@ -261,15 +285,15 @@ export default async function SermonDetailPage({
                   {/* Content */}
                   <div className="p-5">
                     <h3 className="font-heading text-primary text-lg mb-2 group-hover:text-accent transition-colors duration-200 line-clamp-2">
-                      {related.name}
+                      {related.title}
                     </h3>
                     <div className="flex items-center gap-2">
                       <span className="text-accent text-sm font-medium">
-                        {related.speaker}
+                        {related.preacher?.name || ""}
                       </span>
                       <span className="w-1 h-1 rounded-full bg-text-light" />
                       <span className="text-text-muted text-xs">
-                        {formatDate(related.datePreached)}
+                        {formatDate(related.date)}
                       </span>
                     </div>
                   </div>

@@ -1,7 +1,16 @@
-import { blockContent } from "./blockContent";
-import { sermon } from "./sermon";
-import { blogPost } from "./blogPost";
-import { event } from "./event";
-import { siteSettings } from "./siteSettings";
-
-export const schemaTypes = [blockContent, sermon, blogPost, event, siteSettings];
+export { schemaTypes } from "@whiteoakmedia/sanity-schemas";
+export {
+  siteSettings,
+  homePage,
+  aboutPage,
+  givingPage,
+  contactPage,
+  eventsPage,
+  staffPage,
+  event,
+  sermon,
+  ministry,
+  staff,
+} from "@whiteoakmedia/sanity-schemas";
+export { blogPost } from "./blogPost";
+export { blockContent } from "./blockContent";

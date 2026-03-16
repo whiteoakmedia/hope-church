@@ -1,27 +1,27 @@
-import type { SanityEvent } from "@/sanity/types";
+import type { Event } from "@/sanity/types";
 
 /** An event is considered past if its end date (or start date) has passed. */
-export function isEventPast(event: SanityEvent): boolean {
-  const cutoff = event.endTime ?? event.startTime;
+export function isEventPast(event: Event): boolean {
+  const cutoff = event.endDate ?? event.date;
   return new Date(cutoff) < new Date();
 }
 
-/** Upcoming events: not archived and not past, sorted soonest-first. */
-export function getUpcomingEvents(events: SanityEvent[]): SanityEvent[] {
+/** Upcoming events: not past, sorted soonest-first. */
+export function getUpcomingEvents(events: Event[]): Event[] {
   return events
-    .filter((e) => !e.archived && !isEventPast(e))
+    .filter((e) => !isEventPast(e))
     .sort(
       (a, b) =>
-        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+        new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 }
 
-/** Past events: archived or date has passed, sorted most-recent-first. */
-export function getPastEvents(events: SanityEvent[]): SanityEvent[] {
+/** Past events: date has passed, sorted most-recent-first. */
+export function getPastEvents(events: Event[]): Event[] {
   return events
-    .filter((e) => e.archived || isEventPast(e))
+    .filter((e) => isEventPast(e))
     .sort(
       (a, b) =>
-        new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+        new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 }

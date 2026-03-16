@@ -2,13 +2,39 @@ import Image from "next/image";
 import Link from "next/link";
 import { client } from "@/sanity/client";
 import {
-  ALL_SERMONS_QUERY,
-  ALL_EVENTS_QUERY,
-  ALL_BLOG_POSTS_QUERY,
-  SITE_SETTINGS_QUERY,
+  sermonsQuery,
+  eventsQuery,
+  blogPostsQuery,
+  siteSettingsQuery,
+  homePageQuery,
 } from "@/sanity/queries";
-import type { SanitySermon, SanityBlogPost, SanityEvent, SiteSettings } from "@/sanity/types";
+import type { Sermon, SanityBlogPost, Event, SiteSettings, HomePage } from "@/sanity/types";
+import { urlFor } from "@/sanity/image";
 import { getUpcomingEvents } from "@/lib/events";
+
+/* ------------------------------------------------------------------ */
+/*  Helper – extract YouTube video ID from a URL                       */
+/* ------------------------------------------------------------------ */
+function getYouTubeId(url?: string | null): string {
+  if (!url) return "";
+  const match = url?.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=))([^&?]+)/);
+  return match?.[1] || "";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function descriptionToString(desc: any): string {
+  if (!desc) return "";
+  if (typeof desc === "string") return desc;
+  if (Array.isArray(desc)) {
+    return desc
+      .filter((b: { _type?: string }) => b._type === "block")
+      .map((b: { children?: { text?: string }[] }) =>
+        (b.children || []).map((c) => c.text || "").join("")
+      )
+      .join(" ");
+  }
+  return "";
+}
 
 /* ------------------------------------------------------------------ */
 /*  Helper – format a date string nicely                               */
@@ -25,28 +51,29 @@ function formatDate(iso: string) {
 /*  Home Page                                                          */
 /* ------------------------------------------------------------------ */
 export default async function Home() {
-  const [sermons, allEvents, blogPosts, settings] = await Promise.all([
-    client.fetch<SanitySermon[]>(ALL_SERMONS_QUERY),
-    client.fetch<SanityEvent[]>(ALL_EVENTS_QUERY),
-    client.fetch<SanityBlogPost[]>(ALL_BLOG_POSTS_QUERY),
-    client.fetch<SiteSettings | null>(SITE_SETTINGS_QUERY),
+  const [sermons, allEvents, blogPosts, settings, homePage] = await Promise.all([
+    client.fetch<Sermon[]>(sermonsQuery),
+    client.fetch<Event[]>(eventsQuery),
+    client.fetch<SanityBlogPost[]>(blogPostsQuery),
+    client.fetch<SiteSettings | null>(siteSettingsQuery),
+    client.fetch<HomePage | null>(homePageQuery),
   ]);
 
   const latestSermon = sermons[0];
   const upcomingEvents = getUpcomingEvents(allEvents).slice(0, 3);
   const featuredPosts = blogPosts.filter((p) => p.featuredOnHome);
 
-  // Use settings or sensible defaults
-  const heroHeading = settings?.heroHeading || "Join Us for Service!";
+  // Use homePage / settings or sensible defaults
+  const heroHeading = homePage?.heroHeading || "Join Us for Service!";
   const heroSubtext =
-    settings?.heroSubtext ||
+    homePage?.heroSubheading ||
     "We gather each Sunday at 10am & Wednesdays at 7pm. There is a place here for everyone!";
-  const sundayTime = settings?.sundayTime || "10:00 AM";
-  const wednesdayTime = settings?.wednesdayTime || "7:00 PM";
-  const welcomeVideoId = settings?.welcomeVideoId || "oMIh5wfADZg";
-  const ctaHeading = settings?.ctaHeading || "We'd Love to Meet You";
+  const sundayTime = settings?.serviceTimes?.find((t) => t.dayOfWeek === "Sunday")?.time || "10:00 AM";
+  const wednesdayTime = settings?.serviceTimes?.find((t) => t.dayOfWeek === "Wednesday")?.time || "7:00 PM";
+  // CTA data — look for a "cta" section in the homePage sections array, fallback to defaults
+  const ctaSection = homePage?.sections?.find((s) => s.sectionType === "cta");
+  const ctaHeading = ctaSection?.heading || "We'd Love to Meet You";
   const ctaSubtext =
-    settings?.ctaSubtext ||
     "Whether you are new to faith or have been walking with God for years, there is a place for you at Hope Christian Church. Come as you are and discover a community that feels like family.";
 
   return (
@@ -170,7 +197,7 @@ export default async function Home() {
             <div className="animate-fade-in">
               <div className="relative aspect-video w-full overflow-hidden rounded-xl shadow-2xl shadow-primary/10">
                 <iframe
-                  src={`https://www.youtube.com/embed/${welcomeVideoId}`}
+                  src="https://www.youtube.com/embed/oMIh5wfADZg"
                   title="Welcome to Hope Christian Church"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
@@ -239,8 +266,8 @@ export default async function Home() {
               <div className="animate-fade-in">
                 <div className="relative aspect-video w-full overflow-hidden rounded-xl shadow-2xl">
                   <iframe
-                    src={`https://www.youtube.com/embed/${latestSermon.youtubeVideoId}`}
-                    title={latestSermon.name}
+                    src={`https://www.youtube.com/embed/${getYouTubeId(latestSermon.videoUrl)}`}
+                    title={latestSermon.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="absolute inset-0 h-full w-full"
@@ -251,16 +278,16 @@ export default async function Home() {
               {/* Sermon info */}
               <div className="animate-fade-in">
                 <p className="text-sm font-medium uppercase tracking-wider text-accent-light font-body">
-                  {formatDate(latestSermon.datePreached)}
+                  {formatDate(latestSermon.date)}
                 </p>
                 <h3 className="heading-md mt-3 text-white font-heading">
-                  {latestSermon.name}
+                  {latestSermon.title}
                 </h3>
                 <p className="mt-2 text-base text-white/60 font-body">
-                  {latestSermon.speaker}
+                  {latestSermon.preacher?.name || "Unknown"}
                 </p>
                 <p className="mt-4 leading-relaxed text-white/75 font-body">
-                  {latestSermon.description}
+                  {descriptionToString(latestSermon.description)}
                 </p>
                 <Link
                   href="/sermons"
@@ -315,8 +342,8 @@ export default async function Home() {
                 <div className="relative aspect-[16/10] w-full overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={event.imageUrl}
-                    alt={event.name}
+                    src={urlFor(event.image).url()}
+                    alt={event.title}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
@@ -325,7 +352,7 @@ export default async function Home() {
                 {/* Card body */}
                 <div className="p-6">
                   <h3 className="heading-sm text-primary font-heading leading-snug">
-                    {event.name}
+                    {event.title}
                   </h3>
 
                   <div className="mt-4 flex flex-col gap-2">
@@ -358,7 +385,7 @@ export default async function Home() {
                         <line x1="8" y1="2" x2="8" y2="6" />
                         <line x1="3" y1="10" x2="21" y2="10" />
                       </svg>
-                      <span>{formatDate(event.startTime)}</span>
+                      <span>{formatDate(event.date)}</span>
                     </div>
                   </div>
                 </div>

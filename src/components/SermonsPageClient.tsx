@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import type { SanitySermon } from "@/sanity/types";
+import type { Sermon } from "@/sanity/types";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -20,6 +20,27 @@ function truncate(text: string, maxLength: number): string {
   if (!text) return "";
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength).trimEnd() + "...";
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function descriptionToString(desc: any): string {
+  if (!desc) return "";
+  if (typeof desc === "string") return desc;
+  if (Array.isArray(desc)) {
+    return desc
+      .filter((b: { _type?: string }) => b._type === "block")
+      .map((b: { children?: { text?: string }[] }) =>
+        (b.children || []).map((c) => c.text || "").join("")
+      )
+      .join(" ");
+  }
+  return "";
+}
+
+function getYouTubeId(url?: string | null): string {
+  if (!url) return "";
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=))([^&?]+)/);
+  return match?.[1] || "";
 }
 
 /* ------------------------------------------------------------------ */
@@ -72,7 +93,7 @@ function PlayIcon() {
 export default function SermonsPageClient({
   sermons,
 }: {
-  sermons: SanitySermon[];
+  sermons: Sermon[];
 }) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -81,8 +102,8 @@ export default function SermonsPageClient({
     const query = searchQuery.toLowerCase();
     return sermons.filter(
       (sermon) =>
-        sermon.name.toLowerCase().includes(query) ||
-        sermon.speaker.toLowerCase().includes(query)
+        sermon.title.toLowerCase().includes(query) ||
+        (sermon.preacher?.name || "").toLowerCase().includes(query)
     );
   }, [searchQuery, sermons]);
 
@@ -128,8 +149,8 @@ export default function SermonsPageClient({
               <div className="lg:col-span-3">
                 <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-[0_8px_32px_rgba(26,35,50,0.15)]">
                   <iframe
-                    src={`https://www.youtube.com/embed/${latestSermon.youtubeVideoId}`}
-                    title={latestSermon.name}
+                    src={`https://www.youtube.com/embed/${getYouTubeId(latestSermon.videoUrl)}`}
+                    title={latestSermon.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="absolute inset-0 w-full h-full"
@@ -140,20 +161,20 @@ export default function SermonsPageClient({
               {/* Sermon info */}
               <div className="lg:col-span-2 flex flex-col justify-center">
                 <h2 className="font-heading heading-md text-primary mb-3">
-                  {latestSermon.name}
+                  {latestSermon.title}
                 </h2>
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-accent font-medium text-sm">
-                    {latestSermon.speaker}
+                    {latestSermon.preacher?.name || ""}
                   </span>
                   <span className="w-1 h-1 rounded-full bg-text-light" />
                   <span className="text-text-muted text-sm">
-                    {formatDate(latestSermon.datePreached)}
+                    {formatDate(latestSermon.date)}
                   </span>
                 </div>
                 {latestSermon.description && (
                   <p className="body-lg text-text-muted leading-relaxed mb-6">
-                    {latestSermon.description}
+                    {descriptionToString(latestSermon.description)}
                   </p>
                 )}
                 <div className="flex gap-3">
@@ -164,7 +185,7 @@ export default function SermonsPageClient({
                     View Details
                   </Link>
                   <a
-                    href={latestSermon.youtubeUrl}
+                    href={latestSermon.videoUrl ?? undefined}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-outline"
@@ -244,7 +265,7 @@ export default function SermonsPageClient({
               {previousSermons.map((sermon) => (
                 <a
                   key={sermon.slug}
-                  href={sermon.youtubeUrl}
+                  href={sermon.videoUrl ?? undefined}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group bg-white rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(26,35,50,0.06)] hover:shadow-[0_8px_32px_rgba(26,35,50,0.12)] transition-all duration-300 hover:-translate-y-1"
@@ -252,8 +273,8 @@ export default function SermonsPageClient({
                   {/* Thumbnail */}
                   <div className="relative aspect-video overflow-hidden bg-primary/5">
                     <img
-                      src={`https://img.youtube.com/vi/${sermon.youtubeVideoId}/maxresdefault.jpg`}
-                      alt={sermon.name}
+                      src={`https://img.youtube.com/vi/${getYouTubeId(sermon.videoUrl || "")}/maxresdefault.jpg`}
+                      alt={sermon.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-primary/20 group-hover:bg-primary/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -264,20 +285,20 @@ export default function SermonsPageClient({
                   {/* Content */}
                   <div className="p-5">
                     <h3 className="font-heading text-primary text-lg mb-2 group-hover:text-accent transition-colors duration-200 line-clamp-2">
-                      {sermon.name}
+                      {sermon.title}
                     </h3>
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-accent text-sm font-medium">
-                        {sermon.speaker}
+                        {sermon.preacher?.name || ""}
                       </span>
                       <span className="w-1 h-1 rounded-full bg-text-light" />
                       <span className="text-text-muted text-xs">
-                        {formatDate(sermon.datePreached)}
+                        {formatDate(sermon.date)}
                       </span>
                     </div>
                     {sermon.description && (
                       <p className="text-text-muted text-sm leading-relaxed">
-                        {truncate(sermon.description, 120)}
+                        {truncate(descriptionToString(sermon.description), 120)}
                       </p>
                     )}
                   </div>

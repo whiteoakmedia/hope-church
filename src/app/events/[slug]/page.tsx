@@ -3,17 +3,33 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { client } from "@/sanity/client";
 import {
-  EVENT_BY_SLUG_QUERY,
-  EVENT_SLUGS_QUERY,
+  eventBySlugQuery,
+  eventSlugsQuery,
 } from "@/sanity/queries";
-import type { SanityEvent } from "@/sanity/types";
+import type { Event } from "@/sanity/types";
+import { urlFor } from "@/sanity/image";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function descriptionToString(desc: any): string {
+  if (!desc) return "";
+  if (typeof desc === "string") return desc;
+  if (Array.isArray(desc)) {
+    return desc
+      .filter((b: { _type?: string }) => b._type === "block")
+      .map((b: { children?: { text?: string }[] }) =>
+        (b.children || []).map((c) => c.text || "").join("")
+      )
+      .join(" ");
+  }
+  return "";
+}
 
 /* ------------------------------------------------------------------ */
 /*  Static Params                                                      */
 /* ------------------------------------------------------------------ */
 
 export async function generateStaticParams() {
-  const slugs = await client.fetch<{ slug: string }[]>(EVENT_SLUGS_QUERY);
+  const slugs = await client.fetch<{ slug: string }[]>(eventSlugsQuery);
   return slugs.map((s) => ({ slug: s.slug }));
 }
 
@@ -27,20 +43,22 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const event = await client.fetch<SanityEvent | null>(EVENT_BY_SLUG_QUERY, {
+  const event = await client.fetch<Event | null>(eventBySlugQuery, {
     slug,
   });
   if (!event) return { title: "Event Not Found" };
 
+  const descText = descriptionToString(event.description);
+  const imageUrl = event.image ? urlFor(event.image).url() : undefined;
   return {
-    title: event.name,
-    description: event.description || `${event.name} at ${event.location}`,
+    title: event.title,
+    description: descText || `${event.title} at ${event.location}`,
     openGraph: {
-      title: event.name,
-      description: event.description || `${event.name} at ${event.location}`,
+      title: event.title,
+      description: descText || `${event.title} at ${event.location}`,
       type: "article",
-      images: event.imageUrl
-        ? [{ url: event.imageUrl, width: 1200, height: 630 }]
+      images: imageUrl
+        ? [{ url: imageUrl, width: 1200, height: 630 }]
         : undefined,
     },
   };
@@ -82,14 +100,8 @@ function formatEventDate(startTime: string, endTime?: string): string {
 }
 
 /**
- * Extract YouTube video ID from various URL formats.
+ * Placeholder for removed promo video helper.
  */
-function extractYouTubeId(url: string): string | null {
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-  );
-  return match ? match[1] : null;
-}
 
 /* ------------------------------------------------------------------ */
 /*  Icon Components                                                    */
@@ -162,7 +174,7 @@ export default async function EventDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const event = await client.fetch<SanityEvent | null>(EVENT_BY_SLUG_QUERY, {
+  const event = await client.fetch<Event | null>(eventBySlugQuery, {
     slug,
   });
 
@@ -170,18 +182,14 @@ export default async function EventDetailPage({
     notFound();
   }
 
-  const promoVideoId = event.promoVideo
-    ? extractYouTubeId(event.promoVideo)
-    : null;
-
   const eventJsonLd = {
     "@context": "https://schema.org",
     "@type": "Event",
-    name: event.name,
-    description: event.description,
-    startDate: event.startTime,
-    endDate: event.endTime || event.startTime,
-    image: event.imageUrl,
+    name: event.title,
+    description: descriptionToString(event.description),
+    startDate: event.date,
+    endDate: event.endDate || event.date,
+    image: event.image ? urlFor(event.image).url() : undefined,
     location: {
       "@type": "Place",
       name: event.location,
@@ -227,26 +235,19 @@ export default async function EventDetailPage({
               {/* Event image */}
               <div className="relative rounded-xl overflow-hidden shadow-[0_8px_32px_rgba(26,35,50,0.15)] mb-8">
                 <img
-                  src={event.imageUrl}
-                  alt={event.name}
+                  src={event.image ? urlFor(event.image).url() : ""}
+                  alt={event.title}
                   className="w-full h-auto object-cover"
                 />
-                {/* Badges */}
-                {(event.isKids || event.isYouth) && (
+                {/* Category badge */}
+                {event.category && (
                   <div className="absolute top-4 left-4 flex gap-2">
-                    {event.isKids && (
-                      <span className="px-3 py-1 rounded-full bg-[#5B8DEF] text-white text-xs font-semibold uppercase tracking-wide shadow-lg">
-                        Kids Event
-                      </span>
-                    )}
-                    {event.isYouth && (
-                      <span className="px-3 py-1 rounded-full bg-[#8B5CF6] text-white text-xs font-semibold uppercase tracking-wide shadow-lg">
-                        Youth Event
-                      </span>
-                    )}
+                    <span className="px-3 py-1 rounded-full bg-[#5B8DEF] text-white text-xs font-semibold uppercase tracking-wide shadow-lg">
+                      {event.category}
+                    </span>
                   </div>
                 )}
-                {event.archived && (
+                {new Date(event.endDate || event.date) < new Date() && (
                   <div className="absolute top-4 right-4">
                     <span className="px-3 py-1 rounded-full bg-primary/80 text-white/80 text-xs font-semibold uppercase tracking-wide">
                       Past Event
@@ -255,30 +256,13 @@ export default async function EventDetailPage({
                 )}
               </div>
 
-              {/* Promo video */}
-              {promoVideoId && (
-                <div className="mb-8">
-                  <h3 className="font-heading heading-sm text-primary mb-4">
-                    Event Preview
-                  </h3>
-                  <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-[0_8px_32px_rgba(26,35,50,0.15)]">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${promoVideoId}`}
-                      title={`${event.name} - Preview`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="absolute inset-0 w-full h-full"
-                    />
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* ---- Right column: Details ---- */}
             <div className="lg:col-span-2">
               <div className="sticky top-28">
                 <h1 className="font-heading heading-lg text-primary mb-6">
-                  {event.name}
+                  {event.title}
                 </h1>
 
                 {/* Info card */}
@@ -294,7 +278,7 @@ export default async function EventDetailPage({
                           Date
                         </span>
                         <span className="text-text font-medium text-sm">
-                          {formatEventDate(event.startTime, event.endTime)}
+                          {formatEventDate(event.date, event.endDate ?? undefined)}
                         </span>
                       </div>
                     </div>
@@ -323,15 +307,15 @@ export default async function EventDetailPage({
                       About This Event
                     </h3>
                     <p className="text-text-muted leading-relaxed">
-                      {event.description}
+                      {descriptionToString(event.description)}
                     </p>
                   </div>
                 )}
 
                 {/* Register button */}
-                {event.registerLink && !event.archived && (
+                {event.registrationLink && new Date(event.endDate || event.date) >= new Date() && (
                   <a
-                    href={event.registerLink}
+                    href={event.registrationLink}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-primary w-full text-center text-base py-4"
@@ -353,7 +337,7 @@ export default async function EventDetailPage({
                   </a>
                 )}
 
-                {event.archived && (
+                {new Date(event.endDate || event.date) < new Date() && (
                   <div className="bg-bg-alt rounded-xl p-4 text-center">
                     <p className="text-text-muted text-sm">
                       This event has already taken place.

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { client } from "@/sanity/client";
-import { ALL_BLOG_POSTS_QUERY } from "@/sanity/queries";
+import { blogPostsQuery } from "@/sanity/queries";
 import type { SanityBlogPost } from "@/sanity/types";
 
 /* ------------------------------------------------------------------ */
@@ -99,7 +99,7 @@ function BlogCard({ post }: { post: SanityBlogPost }) {
 /* ------------------------------------------------------------------ */
 
 export default async function BlogPage() {
-  const blogPosts = await client.fetch<SanityBlogPost[]>(ALL_BLOG_POSTS_QUERY);
+  const blogPosts = await client.fetch<SanityBlogPost[]>(blogPostsQuery);
 
   const featuredPost = blogPosts.find((p) => p.featuredOnHome);
   const remainingPosts = blogPosts.filter((p) => p !== featuredPost);
