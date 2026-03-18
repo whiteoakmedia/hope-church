@@ -1,7 +1,12 @@
 import Image from "next/image";
 import type { Metadata } from "next";
+import { client } from "@/sanity/client";
+import { PortableText } from "@portabletext/react";
+import { urlFor } from "@/sanity/image";
 
 export const revalidate = 30;
+
+const hopeKidsQuery = '*[_type == "ministry" && slug.current == "hope-kids"][0]{ name, description[]{ ..., markDefs[]{ ... } }, schedule, image{ asset->{ _id, url, metadata { dimensions, lqip } }, hotspot, crop, alt }, contactEmail }';
 
 export const metadata: Metadata = {
   title: "Hope Kids",
@@ -14,7 +19,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HopeKidsPage() {
+export default async function HopeKidsPage() {
+  const ministry = await client.fetch(hopeKidsQuery).catch(() => null);
   return (
     <>
       {/* ================================================================ */}
@@ -59,38 +65,56 @@ export default function HopeKidsPage() {
             {/* Left: Text */}
             <div>
               <h2 className="font-heading heading-lg text-[#1a2332] mb-6">
-                A service just for kids!
+                {ministry?.name || "A service just for kids!"}
               </h2>
               <div className="space-y-4 text-[#6b6561] body-lg">
-                <p>
-                  At Hope Kids, we believe that children are never too young to
-                  experience the love of God. Our children&apos;s ministry is
-                  designed to be fun, engaging, and Christ-centered, helping kids
-                  build a strong foundation of faith.
-                </p>
-                <p>
-                  During our Sunday service, kids stay with their families in the
-                  adult service through worship and offering. After offering, children
-                  are dismissed to their own special service where they enjoy
-                  age-appropriate Bible teaching, exciting games, creative activities,
-                  and hands-on crafts that bring the lessons to life.
-                </p>
-                <p>
-                  Every week is a new adventure as your kids discover more about
-                  God&apos;s Word in a safe, welcoming, and fun environment!
-                </p>
+                {ministry?.description ? (
+                  <PortableText value={ministry.description} />
+                ) : (
+                  <>
+                    <p>
+                      At Hope Kids, we believe that children are never too young to
+                      experience the love of God. Our children&apos;s ministry is
+                      designed to be fun, engaging, and Christ-centered, helping kids
+                      build a strong foundation of faith.
+                    </p>
+                    <p>
+                      During our Sunday service, kids stay with their families in the
+                      adult service through worship and offering. After offering, children
+                      are dismissed to their own special service where they enjoy
+                      age-appropriate Bible teaching, exciting games, creative activities,
+                      and hands-on crafts that bring the lessons to life.
+                    </p>
+                    <p>
+                      Every week is a new adventure as your kids discover more about
+                      God&apos;s Word in a safe, welcoming, and fun environment!
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
             {/* Right: Image */}
             <div className="relative rounded-2xl overflow-hidden shadow-[0_16px_48px_rgba(26,35,50,0.12)]">
-              <Image
-                src="/Kids-Church-Erika-Giraud.jpg"
-                alt="Children enjoying Hope Kids ministry"
-                width={800}
-                height={600}
-                className="w-full h-auto object-cover"
-              />
+              {ministry?.image ? (
+                <Image
+                  src={urlFor(ministry.image).width(800).height(600).url()}
+                  alt={ministry.image.alt || "Children enjoying Hope Kids ministry"}
+                  width={800}
+                  height={600}
+                  className="w-full h-auto object-cover"
+                  placeholder={ministry.image.asset?.metadata?.lqip ? "blur" : undefined}
+                  blurDataURL={ministry.image.asset?.metadata?.lqip}
+                />
+              ) : (
+                <Image
+                  src="/Kids-Church-Erika-Giraud.jpg"
+                  alt="Children enjoying Hope Kids ministry"
+                  width={800}
+                  height={600}
+                  className="w-full h-auto object-cover"
+                />
+              )}
             </div>
           </div>
         </div>

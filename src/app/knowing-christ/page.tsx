@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { client } from "@/sanity/client";
+import { PortableText } from "@portabletext/react";
 
 export const revalidate = 30;
+
+const knowingChristQuery = '*[_type == "ministry" && slug.current == "knowing-christ"][0]{ name, description[]{ ..., markDefs[]{ ... } }, contactEmail }';
 
 /* ------------------------------------------------------------------ */
 /*  Metadata                                                           */
@@ -22,7 +26,10 @@ export const metadata: Metadata = {
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
-export default function KnowingChristPage() {
+export default async function KnowingChristPage() {
+  const ministry = await client.fetch(knowingChristQuery).catch(() => null);
+  const contactEmail = ministry?.contactEmail || "pastorjim@hopeag.com";
+
   return (
     <div className="bg-bg min-h-screen">
       {/* ---- Hero ---- */}
@@ -34,7 +41,7 @@ export default function KnowingChristPage() {
               Your Journey Begins
             </span>
             <h1 className="heading-xl text-white font-heading text-balance">
-              Knowing Christ
+              {ministry?.name || "Knowing Christ"}
             </h1>
             <p className="mt-4 text-white/60 body-lg max-w-2xl mx-auto text-balance">
               The most important decision you will ever make is to accept Jesus
@@ -58,12 +65,16 @@ export default function KnowingChristPage() {
               </h2>
 
               <div className="space-y-5 text-text-muted body-lg">
-                <p>
-                  God loves you and has a wonderful plan for your life. No
-                  matter where you have been or what you have done, His grace is
-                  sufficient, and His arms are open wide. Accepting Christ is as
-                  simple as sincerely praying this prayer:
-                </p>
+                {ministry?.description ? (
+                  <PortableText value={ministry.description} />
+                ) : (
+                  <p>
+                    God loves you and has a wonderful plan for your life. No
+                    matter where you have been or what you have done, His grace is
+                    sufficient, and His arms are open wide. Accepting Christ is as
+                    simple as sincerely praying this prayer:
+                  </p>
+                )}
               </div>
 
               {/* Prayer Card */}
@@ -110,7 +121,7 @@ export default function KnowingChristPage() {
                 {/* Contact Button */}
                 <div className="mt-8">
                   <a
-                    href="mailto:pastorjim@hopeag.com"
+                    href={`mailto:${contactEmail}`}
                     className="btn btn-primary"
                   >
                     <svg
