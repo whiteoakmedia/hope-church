@@ -86,7 +86,7 @@ export default async function Home() {
       <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
         {/* Background image */}
         <Image
-          src="/ChatGPT-Facebook-Photo.jpg"
+          src={homePage?.heroImage?.asset ? urlFor(homePage.heroImage).width(1920).quality(80).url() : "/ChatGPT-Facebook-Photo.jpg"}
           alt="Hope Christian Church worship service"
           fill
           priority
