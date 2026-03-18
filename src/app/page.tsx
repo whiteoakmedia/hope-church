@@ -330,8 +330,8 @@ export default async function Home() {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {upcomingEvents.map((event, i) => (
               <Link
-                key={event.slug}
-                href={`/events/${event.slug}`}
+                key={event.slug || event._id || i}
+                href={event.slug ? `/events/${event.slug}` : "/events"}
                 className="group animate-fade-in overflow-hidden rounded-xl bg-white shadow-lg shadow-primary/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 style={{
                   animationDelay: `${0.15 * i}s`,
