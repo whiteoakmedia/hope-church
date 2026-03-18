@@ -10,6 +10,7 @@ import {
 } from "@/sanity/queries";
 import type { Sermon, SanityBlogPost, Event, SiteSettings, HomePage } from "@/sanity/types";
 import { urlFor } from "@/sanity/image";
+import { PortableText } from "@portabletext/react";
 import { getUpcomingEvents } from "@/lib/events";
 
 export const revalidate = 30;
@@ -75,7 +76,8 @@ export default async function Home() {
   // CTA data — look for a "cta" section in the homePage sections array, fallback to defaults
   const ctaSection = homePage?.sections?.find((s) => s.sectionType === "cta");
   const ctaHeading = ctaSection?.heading || "We'd Love to Meet You";
-  const ctaSubtext =
+  const ctaBody = ctaSection?.body || null;
+  const ctaSubtextFallback =
     "Whether you are new to faith or have been walking with God for years, there is a place for you at Hope Christian Church. Come as you are and discover a community that feels like family.";
 
   return (
@@ -214,18 +216,26 @@ export default async function Home() {
                 Welcome Home
               </span>
               <h2 className="heading-lg accent-underline text-primary font-heading">
-                A Place for Everyone
+                {homePage?.welcomeHeading || "A Place for Everyone"}
               </h2>
-              <p className="body-lg mt-8 text-text-muted font-body">
-                A praying and worshipping church where you will meet people from
-                all ages and backgrounds gathering together to encounter God.
-              </p>
-              <p className="mt-4 text-text-muted font-body leading-relaxed">
-                At Hope Christian Church in North Haven, CT, we believe that God
-                has a purpose for every person. Whether you are taking your first
-                steps of faith or have walked with God for decades, you will find
-                a warm, welcoming community ready to do life alongside you.
-              </p>
+              {homePage?.welcomeBody ? (
+                <div className="mt-8 text-text-muted font-body leading-relaxed [&>p]:mb-4 [&>p:first-child]:text-lg">
+                  <PortableText value={homePage.welcomeBody} />
+                </div>
+              ) : (
+                <>
+                  <p className="body-lg mt-8 text-text-muted font-body">
+                    A praying and worshipping church where you will meet people from
+                    all ages and backgrounds gathering together to encounter God.
+                  </p>
+                  <p className="mt-4 text-text-muted font-body leading-relaxed">
+                    At Hope Christian Church in North Haven, CT, we believe that God
+                    has a purpose for every person. Whether you are taking your first
+                    steps of faith or have walked with God for decades, you will find
+                    a warm, welcoming community ready to do life alongside you.
+                  </p>
+                </>
+              )}
               <Link
                 href="/what-we-believe"
                 className="btn btn-primary mt-8 inline-flex"
@@ -514,12 +524,21 @@ export default async function Home() {
             >
               {ctaHeading}
             </h2>
-            <p
-              className="body-lg mt-6 max-w-xl mx-auto text-white/85 text-balance font-body animate-fade-in"
-              style={{ animationDelay: "0.3s", animationFillMode: "both" }}
-            >
-              {ctaSubtext}
-            </p>
+            {ctaBody ? (
+              <div
+                className="body-lg mt-6 max-w-xl mx-auto text-white/85 text-balance font-body animate-fade-in [&>p]:mb-4 [&>p:last-child]:mb-0"
+                style={{ animationDelay: "0.3s", animationFillMode: "both" }}
+              >
+                <PortableText value={ctaBody} />
+              </div>
+            ) : (
+              <p
+                className="body-lg mt-6 max-w-xl mx-auto text-white/85 text-balance font-body animate-fade-in"
+                style={{ animationDelay: "0.3s", animationFillMode: "both" }}
+              >
+                {ctaSubtextFallback}
+              </p>
+            )}
             <div
               className="mt-10 animate-fade-in"
               style={{ animationDelay: "0.5s", animationFillMode: "both" }}
