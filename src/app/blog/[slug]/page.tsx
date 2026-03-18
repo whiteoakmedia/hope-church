@@ -11,6 +11,8 @@ import {
 import type { SanityBlogPost } from "@/sanity/types";
 import PortableTextRenderer from "@/components/PortableTextRenderer";
 
+export const revalidate = 30;
+
 /* ------------------------------------------------------------------ */
 /*  Static Params                                                      */
 /* ------------------------------------------------------------------ */

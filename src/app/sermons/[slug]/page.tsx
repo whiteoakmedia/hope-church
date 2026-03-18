@@ -9,6 +9,8 @@ import {
 } from "@/sanity/queries";
 import type { Sermon } from "@/sanity/types";
 
+export const revalidate = 30;
+
 /* ------------------------------------------------------------------ */
 /*  Helper – extract YouTube video ID from a URL                       */
 /* ------------------------------------------------------------------ */

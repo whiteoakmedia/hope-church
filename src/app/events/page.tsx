@@ -6,6 +6,8 @@ import type { Event, EventsPage } from "@/sanity/types";
 import { urlFor } from "@/sanity/image";
 import { getUpcomingEvents, getPastEvents } from "@/lib/events";
 
+export const revalidate = 30;
+
 /* ------------------------------------------------------------------ */
 /*  Metadata                                                           */
 /* ------------------------------------------------------------------ */

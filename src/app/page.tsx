@@ -12,6 +12,8 @@ import type { Sermon, SanityBlogPost, Event, SiteSettings, HomePage } from "@/sa
 import { urlFor } from "@/sanity/image";
 import { getUpcomingEvents } from "@/lib/events";
 
+export const revalidate = 30;
+
 /* ------------------------------------------------------------------ */
 /*  Helper – extract YouTube video ID from a URL                       */
 /* ------------------------------------------------------------------ */

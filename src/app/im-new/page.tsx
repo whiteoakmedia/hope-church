@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
+export const revalidate = 30;
+
 export const metadata: Metadata = {
   title: "I'm New",
   description:

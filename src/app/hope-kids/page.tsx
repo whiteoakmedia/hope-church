@@ -1,6 +1,8 @@
 import Image from "next/image";
 import type { Metadata } from "next";
 
+export const revalidate = 30;
+
 export const metadata: Metadata = {
   title: "Hope Kids",
   description:

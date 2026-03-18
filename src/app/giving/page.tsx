@@ -4,6 +4,8 @@ import { givingPageQuery, siteSettingsQuery } from "@/sanity/queries";
 import type { GivingPage, SiteSettings } from "@/sanity/types";
 import PortableTextRenderer from "@/components/PortableTextRenderer";
 
+export const revalidate = 30;
+
 export const metadata: Metadata = {
   title: "Give",
   description:

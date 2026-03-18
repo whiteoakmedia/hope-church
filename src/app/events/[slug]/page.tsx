@@ -9,6 +9,8 @@ import {
 import type { Event } from "@/sanity/types";
 import { urlFor } from "@/sanity/image";
 
+export const revalidate = 30;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function descriptionToString(desc: any): string {
   if (!desc) return "";

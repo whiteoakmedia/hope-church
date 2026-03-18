@@ -5,6 +5,8 @@ import { client } from "@/sanity/client";
 import { blogPostsQuery } from "@/sanity/queries";
 import type { SanityBlogPost } from "@/sanity/types";
 
+export const revalidate = 30;
+
 /* ------------------------------------------------------------------ */
 /*  Metadata                                                           */
 /* ------------------------------------------------------------------ */
