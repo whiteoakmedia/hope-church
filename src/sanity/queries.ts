@@ -243,7 +243,7 @@ export const eventBySlugQuery = `
 `;
 
 export const eventSlugsQuery = `
-  *[_type == "event"]{ "slug": slug.current }
+  *[_type == "event" && defined(slug.current)]{ "slug": slug.current }
 `;
 
 /* ------------------------------------------------------------------ */
@@ -291,7 +291,7 @@ export const sermonBySlugQuery = `
 `;
 
 export const sermonSlugsQuery = `
-  *[_type == "sermon"]{ "slug": slug.current }
+  *[_type == "sermon" && defined(slug.current)]{ "slug": slug.current }
 `;
 
 /* CRON sync helpers */
@@ -383,5 +383,5 @@ export const blogPostBySlugQuery = `
 `;
 
 export const blogSlugsQuery = `
-  *[_type == "blogPost"]{ "slug": slug.current }
+  *[_type == "blogPost" && defined(slug.current)]{ "slug": slug.current }
 `;

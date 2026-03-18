@@ -38,7 +38,7 @@ function descriptionToString(desc: any): string {
 
 export async function generateStaticParams() {
   const slugs = await client.fetch<{ slug: string }[]>(sermonSlugsQuery);
-  return slugs.map((s) => ({ slug: s.slug }));
+  return slugs.filter((s) => typeof s.slug === "string").map((s) => ({ slug: s.slug }));
 }
 
 /* ------------------------------------------------------------------ */
