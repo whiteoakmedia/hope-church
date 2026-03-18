@@ -223,13 +223,15 @@ export default async function EventsPage() {
                       )}
 
                       <div className="flex flex-wrap gap-3">
-                        <Link
-                          href={`/events/${event.slug}`}
-                          className="btn btn-outline text-sm"
-                        >
-                          View Details
-                          <ArrowRightIcon />
-                        </Link>
+                        {event.slug && (
+                          <Link
+                            href={`/events/${event.slug}`}
+                            className="btn btn-outline text-sm"
+                          >
+                            View Details
+                            <ArrowRightIcon />
+                          </Link>
+                        )}
                         {event.registrationLink && (
                           <a
                             href={event.registrationLink}
