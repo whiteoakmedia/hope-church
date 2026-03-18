@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { client } from "@/sanity/client";
-import { eventsQuery } from "@/sanity/queries";
-import type { Event } from "@/sanity/types";
+import { eventsQuery, eventsPageQuery } from "@/sanity/queries";
+import type { Event, EventsPage } from "@/sanity/types";
 import { urlFor } from "@/sanity/image";
 import { getUpcomingEvents, getPastEvents } from "@/lib/events";
 
@@ -136,9 +136,15 @@ export default async function EventsPage() {
     return "";
   }
 
-  const allEvents = await client.fetch<Event[]>(eventsQuery);
+  const [allEvents, eventsPage] = await Promise.all([
+    client.fetch<Event[]>(eventsQuery),
+    client.fetch<EventsPage | null>(eventsPageQuery),
+  ]);
   const upcomingEvents = getUpcomingEvents(allEvents);
   const pastEvents = getPastEvents(allEvents);
+
+  const heroHeading = eventsPage?.heroHeading || "Events";
+  const heroSub = eventsPage?.heroSubheading || "Join us for fellowship, worship, and community. There is always something happening at Hope Christian Church.";
 
   return (
     <>
@@ -150,11 +156,10 @@ export default async function EventsPage() {
         <div className="relative section-padding">
           <div className="container-wide text-center">
             <h1 className="font-heading heading-xl text-white mb-4">
-              Events
+              {heroHeading}
             </h1>
             <p className="body-lg text-white/70 max-w-2xl mx-auto">
-              Join us for fellowship, worship, and community. There is always
-              something happening at Hope Christian Church.
+              {heroSub}
             </p>
           </div>
         </div>
